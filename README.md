@@ -1,4 +1,3 @@
-```markdown
 # TrustyDust
 
 A modern web application built with Vite, React, TypeScript, shadcn/ui, and Tailwind CSS.
@@ -30,6 +29,7 @@ Live demo: [https://trustydust.netlify.app](https://trustydust.netlify.app)
 > ```
 
 ### Installation
+
 
 1. **Clone the repository**
    ```sh
@@ -102,7 +102,7 @@ To deploy updates:
 ## Custom Domain
 
 This project is served from a custom domain:  
-**`TrustyDust.ideatecore.com`**
+**`trustydust.netlify.app`**
 
 Domain setup and DNS are managed externally.
 
