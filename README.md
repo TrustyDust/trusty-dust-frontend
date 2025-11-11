@@ -3,7 +3,7 @@
 
 A modern web application built with Vite, React, TypeScript, shadcn/ui, and Tailwind CSS.
 
-Live demo: [https://TrustyDust.ideatecore.com](https://TrustyDust.ideatecore.com)
+Live demo: [https://trustydust.netlify.app](https://trustydust.netlify.app)
 
 ---
 
@@ -89,7 +89,7 @@ You can edit the project using any of the following methods:
 ## Deployment
 
 The project is deployed at:  
-[https://TrustyDust.ideatecore.com](https://TrustyDust.ideatecore.com)
+[https://trustydust.netlify.app](https://trustydust.netlify.app)
 
 To deploy updates:
 1. Push changes to the `main` branch
