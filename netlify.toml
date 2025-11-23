@@ -1,33 +1,10 @@
-# netlify.toml – Optimized for Next.js (App Router / Pages Router)
-
 [build]
-command = "npm run build"
-publish = ".next"                     # Bukan "next", tapi ".next"
-environment = { NODE_VERSION = "22" }
-
-# === NEXT.JS RUNTIME CONFIG ===
-[functions]
-directory = ".next/server" # Next.js serverless functions
-node_bundler = "esbuild"
-
-# === IMAGE OPTIMIZATION (Next/Image) ===
+  command = "npm run build"
+  # Do NOT set publish to ".next" manually, the plugin handles the output location.
+  
 [[plugins]]
-package = "@netlify/plugin-nextjs"
+  package = "@netlify/plugin-nextjs"
 
-# === REDIRECTS & REWRITES (SPA Fallback + API + Static) ===
-[[redirects]]
-from = "/_next/static/*"
-to = "/_next/static/:splat"
-status = 200
-
-[[redirects]]
-from = "/api/*"
-to = "/.netlify/functions/___netlify-handler"
-status = 200
-
-# SPA Fallback untuk client-side routing (App Router / Pages Router)
-[[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
-force = true
+# You can keep the Environment config if you need specific node versions
+[build.environment]
+  NODE_VERSION = "22"
