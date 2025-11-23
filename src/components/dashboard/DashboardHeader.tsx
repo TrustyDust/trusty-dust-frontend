@@ -55,7 +55,7 @@ export function DashboardHeader({
   selectedFilter,
   onFilterChange,
 }: DashboardHeaderProps) {
-  const { isAuthenticated, connectWithPrivy, logout } = useAuth()
+  const { isAuthenticated, logout, toggleLoginModal } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -237,7 +237,7 @@ export function DashboardHeader({
         ) : (
           <button
             className="rounded-full border border-white/10 bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]"
-            onClick={connectWithPrivy}
+            onClick={toggleLoginModal}
           >
             Login
           </button>

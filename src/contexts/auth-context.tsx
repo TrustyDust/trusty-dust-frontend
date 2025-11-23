@@ -3,6 +3,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
 import { toast } from "sonner"
 import { usePrivy } from "@privy-io/react-auth"
+import { useAccount } from "wagmi"
+import { useConnectModal } from "@rainbow-me/rainbowkit"
 
 type LoginMethod = "privy" | "rainbow" | null
 
@@ -10,8 +12,11 @@ type AuthContextValue = {
   isAuthenticated: boolean
   walletAddress: string | null
   connecting: LoginMethod
+  showLoginModal: boolean
   connectWithPrivy: () => Promise<void>
   connectWithRainbow: () => Promise<void>
+  toggleLoginModal: () => void
+  closeLoginModal: () => void
   logout: () => void
 }
 
@@ -21,13 +26,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [connecting, setConnecting] = useState<LoginMethod>(null)
+  const [showLoginModal, setShowLoginModal] = useState(false)
   const { ready, authenticated, user, login, logout: privyLogout } = usePrivy()
+  const { openConnectModal } = useConnectModal()
+  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
 
   useEffect(() => {
     if (!ready) return
     setIsAuthenticated(authenticated)
     setWalletAddress(user?.wallet?.address ?? null)
+    if (authenticated) {
+      setShowLoginModal(false)
+    }
   }, [authenticated, ready, user])
+
+  useEffect(() => {
+    if (wagmiConnected && wagmiAddress) {
+      setWalletAddress(wagmiAddress)
+      setIsAuthenticated(true)
+      setShowLoginModal(false)
+    } else if (!wagmiConnected && !authenticated) {
+      setWalletAddress(null)
+      setIsAuthenticated(false)
+    }
+  }, [authenticated, wagmiAddress, wagmiConnected])
 
   const connectWithPrivy = useCallback(async () => {
     try {
@@ -38,6 +60,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       await login()
       toast.success("Authenticated with Privy")
+      setShowLoginModal(false)
     } catch (error) {
       console.error(error)
       toast.error("Failed to login with Privy")
@@ -49,25 +72,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const connectWithRainbow = useCallback(async () => {
     try {
       setConnecting("rainbow")
-      if (typeof window === "undefined") {
-        throw new Error("Window is not available")
-      }
-      const provider = (window as any)?.ethereum
-      if (!provider) {
-        toast.error("No Ethereum provider detected")
+      if (!openConnectModal) {
+        toast.error("RainbowKit unavailable")
         return
       }
-      const accounts = await provider.request({ method: "eth_requestAccounts" })
-      setWalletAddress(accounts?.[0] ?? null)
-      setIsAuthenticated(true)
-      toast.success("Wallet connected")
+      openConnectModal()
     } catch (error) {
       console.error(error)
       toast.error("Failed to connect wallet")
     } finally {
       setConnecting(null)
     }
-  }, [])
+  }, [openConnectModal])
 
   const logout = useCallback(async () => {
     try {
@@ -86,11 +102,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isAuthenticated,
       walletAddress,
       connecting,
+      showLoginModal,
       connectWithPrivy,
       connectWithRainbow,
+      toggleLoginModal: () => setShowLoginModal((prev) => !prev),
+      closeLoginModal: () => setShowLoginModal(false),
       logout,
     }),
-    [connecting, connectWithPrivy, connectWithRainbow, isAuthenticated, logout, walletAddress],
+    [connecting, connectWithPrivy, connectWithRainbow, isAuthenticated, logout, showLoginModal, walletAddress],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

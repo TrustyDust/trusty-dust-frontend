@@ -1,6 +1,7 @@
 import type { Metadata } from "next"
 import { Providers } from "./providers"
 import "../css/globals.css"
+import "@rainbow-me/rainbowkit/styles.css"
 
 export const metadata: Metadata = {
   title: "Trusty Dust",
