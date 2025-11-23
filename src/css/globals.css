@@ -134,6 +134,44 @@
     box-shadow: var(--glow-purple);
   }
 
+  @keyframes star-twinkle {
+    0% {
+      opacity: var(--twinkle-opacity, 0.25);
+    }
+    50% {
+      opacity: 0.05;
+    }
+    100% {
+      opacity: var(--twinkle-opacity, 0.25);
+    }
+  }
+
+  .star {
+    animation: star-twinkle calc(4s + var(--twinkle-delay, 0s)) ease-in-out infinite;
+  }
+
+  @keyframes comet-fly {
+    0% {
+      transform: translate3d(0, 0, 0);
+      opacity: 0;
+    }
+    10% {
+      opacity: 1;
+    }
+    80% {
+      opacity: 1;
+    }
+    100% {
+      transform: translate3d(var(--tx, 0), var(--ty, 0), 0);
+      opacity: 0;
+    }
+  }
+
+  .comet-animate {
+    animation: comet-fly var(--duration, 12s) linear infinite;
+    animation-delay: var(--delay, 0s);
+  }
+
   @keyframes starfield {
     0% {
       transform: translateY(0) scale(1);
