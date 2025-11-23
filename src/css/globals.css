@@ -1,0 +1,172 @@
+@import "tailwindcss";
+
+@theme {
+  --font-inter: "Inter", sans-serif;
+  --font-orbitron: "Orbitron", sans-serif;
+
+  --color-background: hsl(var(--background));
+  --color-background-secondary: hsl(var(--background-secondary));
+  --color-foreground: hsl(var(--foreground));
+
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+}
+
+@layer base {
+  :root {
+    /* Dark Cyberpunk Base */
+    --background: 270 50% 8%;
+    --background-secondary: 270 45% 12%;
+    --foreground: 0 0% 98%;
+
+    /* Neon Accents */
+    --neon-pink: 300 100% 50%;
+    --neon-cyan: 180 100% 50%;
+    --neon-purple: 270 100% 60%;
+
+    /* Semantic Colors */
+    --primary: 300 100% 50%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 270 50% 8%;
+
+    --accent: 270 100% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --muted: 270 30% 20%;
+    --muted-foreground: 0 0% 70%;
+
+    --card: 270 45% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 270 45% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    --border: 270 30% 25%;
+    --input: 270 30% 20%;
+    --ring: 300 100% 50%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --radius: 0.75rem;
+
+    /* Gradients */
+    --gradient-dark: linear-gradient(
+      135deg,
+      hsl(270 50% 8%) 0%,
+      hsl(270 45% 12%) 100%
+    );
+    --gradient-neon: linear-gradient(
+      135deg,
+      hsl(300 100% 50%) 0%,
+      hsl(180 100% 50%) 100%
+    );
+    --gradient-purple: linear-gradient(
+      135deg,
+      hsl(270 100% 60%) 0%,
+      hsl(300 100% 50%) 100%
+    );
+
+    /* Glows */
+    --glow-pink: 0 0 20px hsl(300 100% 50% / 0.5),
+      0 0 40px hsl(300 100% 50% / 0.3);
+    --glow-cyan: 0 0 20px hsl(180 100% 50% / 0.5),
+      0 0 40px hsl(180 100% 50% / 0.3);
+    --glow-purple: 0 0 20px hsl(270 100% 60% / 0.5),
+      0 0 40px hsl(270 100% 60% / 0.3);
+
+    /* Transitions */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-glow: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  * {
+    border-color: hsl(var(--border));
+  }
+
+  body {
+    background-color: #030714;
+    background-image: url("/starfield-img.png");
+    background-size: cover;
+    background-repeat: repeat;
+    background-attachment: fixed;
+    color: hsl(var(--foreground));
+    font-family: var(--font-inter);
+    min-height: 100vh;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-orbitron);
+  }
+}
+
+@layer utilities {
+  .glow-pink {
+    box-shadow: var(--glow-pink);
+  }
+  .glow-cyan {
+    box-shadow: var(--glow-cyan);
+  }
+  .glow-purple {
+    box-shadow: var(--glow-purple);
+  }
+
+  .hover-glow-pink:hover {
+    box-shadow: var(--glow-pink);
+    transform: translateY(-2px);
+    transition: var(--transition-glow);
+  }
+  .hover-glow-cyan:hover {
+    box-shadow: var(--glow-cyan);
+    transform: translateY(-2px);
+    transition: var(--transition-glow);
+  }
+  .hover-glow-purple:hover {
+    box-shadow: var(--glow-purple);
+    transform: translateY(-2px);
+    transition: var(--transition-glow);
+  }
+
+  .text-gradient-neon {
+    background: var(--gradient-neon);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .cyber-grid {
+    background-image: linear-gradient(
+        rgba(255, 0, 255, 0.1) 1px,
+        transparent 1px
+      ),
+      linear-gradient(90deg, rgba(255, 0, 255, 0.1) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+}

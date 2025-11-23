@@ -1,14 +1,33 @@
+# netlify.toml – Optimized for Next.js (App Router / Pages Router)
 
 [build]
 command = "npm run build"
+publish = ".next"                     # Bukan "next", tapi ".next"
+environment = { NODE_VERSION = "22" }
 
-publish = "dist"
+# === NEXT.JS RUNTIME CONFIG ===
+[functions]
+directory = ".next/server" # Next.js serverless functions
+node_bundler = "esbuild"
 
-[build.environment]
-NODE_VERSION = "18"
+# === IMAGE OPTIMIZATION (Next/Image) ===
+[[plugins]]
+package = "@netlify/plugin-nextjs"
 
+# === REDIRECTS & REWRITES (SPA Fallback + API + Static) ===
+[[redirects]]
+from = "/_next/static/*"
+to = "/_next/static/:splat"
+status = 200
 
+[[redirects]]
+from = "/api/*"
+to = "/.netlify/functions/___netlify-handler"
+status = 200
+
+# SPA Fallback untuk client-side routing (App Router / Pages Router)
 [[redirects]]
 from = "/*"
 to = "/index.html"
 status = 200
+force = true
