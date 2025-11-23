@@ -19,24 +19,24 @@ export function Providers({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <WagmiProvider config={wagmiConfig}>
-      <QueryClientProvider client={queryClient}>
-        <RainbowKitProvider>
-          <PrivyProvider
-            appId={privyAppId ?? ""}
-            config={{
-              appearance: {
-                theme: "dark",
-                accentColor: "#3BA3FF",
-              },
-              loginMethods: ["email", "google", "wallet"],
-              embeddedWallets: {
-                ethereum: {
-                  createOnLogin: "users-without-wallets",
-                },
-              },
-            }}
-          >
+    <QueryClientProvider client={queryClient}>
+      <PrivyProvider
+        appId={privyAppId ?? ""}
+        config={{
+          appearance: {
+            theme: "dark",
+            accentColor: "#3BA3FF",
+          },
+          loginMethods: ["email", "google", "wallet"],
+          embeddedWallets: {
+            ethereum: {
+              createOnLogin: "users-without-wallets",
+            },
+          },
+        }}
+      >
+        <WagmiProvider config={wagmiConfig}>
+          <RainbowKitProvider>
             <AuthProvider>
               <TooltipProvider>
                 {children}
@@ -55,9 +55,9 @@ export function Providers({
                 <LoginModal />
               </TooltipProvider>
             </AuthProvider>
-          </PrivyProvider>
-        </RainbowKitProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+          </RainbowKitProvider>
+        </WagmiProvider>
+      </PrivyProvider>
+    </QueryClientProvider>
   )
 }

@@ -7,5 +7,5 @@ export const wagmiConfig = getDefaultConfig({
   appName: "TrustyDust",
   projectId: walletConnectId,
   chains: [mainnet, polygon, optimism, arbitrum, base],
-  ssr: true,
+  ssr: false,
 })
