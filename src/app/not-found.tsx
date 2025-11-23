@@ -1,39 +1,36 @@
-'use client';
+'use client'
 
-import { useEffect } from "react";
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import Link from "next/link"
 
 export default function NotFound() {
-    const pathname = usePathname();
+  return (
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#030714] px-6 py-16 text-white">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute inset-0 bg-gradient-to-br from-[#050C24] via-[#040a18] to-[#040914]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,163,255,0.25),_transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_rgba(107,77,255,0.2),_transparent_40%)]" />
+      </div>
 
-    useEffect(() => {
-        console.error("404 Error: User attempted to access non-existent route:", pathname);
-    }, [pathname]);
-
-    return (
-        <div className="flex min-h-screen items-center justify-center bg-background">
-            <div className="text-center space-y-6">
-                {/* 404 Text with Cyberpunk Glow */}
-                <h1 className="text-8xl md:text-9xl font-bold font-orbitron bg-linear-to-r from-neon-pink via-neon-purple to-neon-cyan bg-clip-text text-transparent glow-pink animate-pulse">
-                    404
-                </h1>
-
-                <p className="text-2xl md:text-3xl font-orbitron text-foreground">
-                    Signal Lost in the Matrix
-                </p>
-
-                <p className="text-lg text-muted-foreground max-w-md mx-auto">
-                    The page you're looking for has been deleted, moved, or never existed in this timeline.
-                </p>
-
-                <Link
-                    href="/"
-                    className="inline-block mt-8 px-8 py-4 bg-neon-pink text-primary-foreground font-semibold rounded-xl glow-pink hover:scale-105 transition-all duration-300 shadow-lg"
-                >
-                    Return to Homebase
-                </Link>
-            </div>
-        </div>
-    );
+      <div className="relative z-10 max-w-lg text-center space-y-6 rounded-[32px] border border-white/10 bg-[#030b1e]/80 p-10 backdrop-blur">
+        <p className="text-xs uppercase tracking-[0.5em] text-gray-400">
+          TrustyDust Navigation
+        </p>
+        <h1 className="text-7xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0]">
+          404
+        </h1>
+        <p className="text-2xl font-semibold">Signal Lost In The Nebula</p>
+        <p className="text-sm text-gray-400">
+          The star path you tried to reach is either uncharted or has been
+          decommissioned. Plot a new trajectory back to the dashboard and keep
+          building your reputation.
+        </p>
+        <Link
+          href="/"
+          className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-8 py-3 text-sm font-semibold shadow-[0_15px_45px_rgba(46,127,255,0.45)] transition hover:scale-105"
+        >
+          Return To Dashboard
+        </Link>
+      </div>
+    </div>
+  )
 }
