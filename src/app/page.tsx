@@ -110,8 +110,8 @@ const applications = [
 
 export default function Dashboard() {
   return (
-    <div className="relative min-h-screen overflow-hidden  px-4 py-6 text-white sm:px-6 lg:px-8">
-      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6">
+    <div className="relative min-h-screen px-4 py-6 text-white sm:px-6 lg:px-8">
+      <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10">
         <DashboardHeader
           actions={
             <>
@@ -126,12 +126,12 @@ export default function Dashboard() {
           }
         />
 
-        <div className="flex flex-col gap-6 lg:flex-row">
+        <div className="flex w-full flex-col gap-6 lg:flex-row">
           <aside className="hidden w-60 shrink-0 lg:flex xl:w-64">
             <DashboardSidebar activeNav="explore" />
           </aside>
 
-          <main className="flex-1 lg:max-w-3xl">
+          <main className="flex-1 pr-2 lg:max-w-3xl">
             <div className="space-y-6">
               <section className="rounded-[28px] border border-white/10 bg-[#040f25]/70 p-6 backdrop-blur">
                 <div className="flex items-center gap-4">
