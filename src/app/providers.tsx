@@ -25,7 +25,10 @@ export function Providers({
           },
           loginMethods: ["email", "google", "wallet"],
           embeddedWallets: {
-            createOnLogin: "users-without-wallets",
+            ethereum: {
+              createOnLogin: "users-without-wallets"
+            },
+            
           },
         }}
       >
