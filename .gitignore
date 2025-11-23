@@ -13,6 +13,8 @@ dist-ssr
 *.local
 
 .env
+.next
+prompt
 
 # Editor directories and files
 .vscode/*
