@@ -3,7 +3,7 @@
 [build]
 command = "npm run build"
 publish = ".next"                     # Bukan "next", tapi ".next"
-environment = { NODE_VERSION = "18" }
+environment = { NODE_VERSION = "22" }
 
 # === NEXT.JS RUNTIME CONFIG ===
 [functions]
