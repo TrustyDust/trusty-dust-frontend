@@ -26,7 +26,7 @@ type SidebarNavCardProps = {
   active?: NavKey
 }
 
-export function SidebarNavCard({ active = "explore" }: SidebarNavCardProps) {
+export function SidebarNavCard({ active = "explore" }: Readonly<SidebarNavCardProps>) {
   const pathname = usePathname()
 
   return (

@@ -107,10 +107,10 @@
   }
 
   body {
-    background-color: hsl(var(--background));
-    background-image: url("/starfield.svg");
+    background-color: #030714;
+    background-image: url("/starfield-img.png");
     background-size: cover;
-    background-repeat: no-repeat;
+    background-repeat: repeat;
     background-attachment: fixed;
     color: hsl(var(--foreground));
     font-family: var(--font-inter);

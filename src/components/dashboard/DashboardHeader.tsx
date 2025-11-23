@@ -29,6 +29,7 @@ export type SearchFilterOption = {
 
 const defaultProfileMenu: ProfileMenuItem[] = [
   { label: "Profile", icon: <User className="h-4 w-4" />, href: "/profile" },
+  // { label: "Edit Profile", icon: <User className="h-4 w-4" />, href: "/profile/edit" },
   { label: "My Posted Job", icon: <Briefcase className="h-4 w-4" /> },
   { label: "Disconnect", intent: "danger", icon: <Power className="h-4 w-4" /> },
 ]
