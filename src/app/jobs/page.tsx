@@ -5,6 +5,8 @@ import { Briefcase, MapPin } from "lucide-react"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { NavLink } from "@/components/NavLink"
+import { ApplyJobModal } from "@/components/dashboard/ApplyJobModal"
 
 const jobListings = [
   {
@@ -97,6 +99,9 @@ const jobListings = [
 
 export default function JobsPage() {
   const [selectedId, setSelectedId] = useState(jobListings[0].id)
+
+  const [isApplyModalOpen, setIsApplyModalOpen] = useState(false)
+
   const selectedJob = useMemo(
     () => jobListings.find((job) => job.id === selectedId) ?? jobListings[0],
     [selectedId],
@@ -105,9 +110,9 @@ export default function JobsPage() {
   return (
     <div className="relative min-h-screen px-4 py-6 text-white sm:px-6 lg:px-8 pb-10">
       <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#050C24] via-[#060A1B] to-[#0A0F1D]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,163,255,0.35),_transparent_45%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_rgba(107,77,255,0.25),_transparent_40%)]" />
+        <div className="absolute inset-0 bg-linear-to-br from-[#050C24] via-[#060A1B] to-[#0A0F1D]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,163,255,0.35),transparent_45%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(107,77,255,0.25),transparent_40%)]" />
         <div className="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=%27120%27 height=%27120%27 viewBox=%270 0 160 160%27 xmlns=%27http://www.w3.org/2000/svg%27%3E%3Cg fill=%27none%27 fill-opacity=%270.15%27%3E%3Cpath d=%27M0 0h160v160H0z%27/%3E%3Cpath d=%27M0 0l160 160m0-160L0 160%27 stroke=%27%23ffffff%27 stroke-opacity=%270.08%27/%3E%3C/g%3E%3C/svg%3E')] opacity-40" />
       </div>
 
@@ -133,7 +138,7 @@ export default function JobsPage() {
                   />
                 </svg>
               </button>
-              <button className="rounded-full border border-transparent bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]">
+              <button className="rounded-full border border-transparent bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]">
                 Become Pro Member
               </button>
             </>
@@ -145,7 +150,7 @@ export default function JobsPage() {
             <DashboardSidebar activeNav="jobs" />
           </aside>
 
-          <main className="flex-1 pr-2">
+          <main className="flex-1">
             <div className="flex flex-col gap-6 lg:flex-row">
               <section className="flex-1 space-y-6">
                 <div className="rounded-[28px] border border-white/10 bg-[#040f25]/80 p-6 backdrop-blur">
@@ -158,9 +163,9 @@ export default function JobsPage() {
                         Find Some Amazing Talent Here
                       </h2>
                     </div>
-                    <button className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold shadow-[0_10px_30px_rgba(35,119,255,0.45)]">
+                    <NavLink href={"/jobs/add"} className="inline-flex items-center justify-center rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold shadow-[0_10px_30px_rgba(35,119,255,0.45)]">
                       + Post A Job
-                    </button>
+                    </NavLink>
                   </div>
                 </div>
 
@@ -180,7 +185,7 @@ export default function JobsPage() {
                         <button
                           key={job.id}
                           onClick={() => setSelectedId(job.id)}
-                          className={`flex w-full items-center justify-between rounded-[24px] border px-4 py-4 text-left transition ${
+                          className={`flex w-full items-center justify-between rounded-3xl border px-4 py-4 text-left transition ${
                             active
                               ? "border-[#2E7FFF] bg-[#06183b]/90 shadow-[0_15px_40px_rgba(6,20,43,0.75)]"
                               : "border-transparent bg-[#050f22]/85 hover:border-[#1b2f55]"
@@ -261,14 +266,23 @@ export default function JobsPage() {
                   </div>
                 </div>
 
-                <button className="mt-8 w-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] py-3 text-sm font-semibold shadow-[0_15px_45px_rgba(35,119,255,0.45)]">
-                  Apply Now
-                </button>
+<button 
+                    onClick={() => setIsApplyModalOpen(true)}
+                    className="mt-8 w-full rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] py-3 text-sm font-semibold shadow-[0_15px_45px_rgba(35,119,255,0.45)] hover:shadow-[0_20px_60px_rgba(35,119,255,0.6)] transition-all"
+                  >
+                    Apply Now
+                  </button>
               </section>
             </div>
           </main>
         </div>
       </div>
+      <ApplyJobModal 
+        isOpen={isApplyModalOpen} 
+        onClose={() => setIsApplyModalOpen(false)} 
+        jobTitle={selectedJob.title}
+      />
     </div>
+    
   )
 }

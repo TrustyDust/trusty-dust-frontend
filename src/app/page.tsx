@@ -15,6 +15,7 @@ import {
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { NavLink } from "@/components/NavLink"
 
 const composerActions = [
   { label: "Image", icon: ImageIcon },
@@ -158,9 +159,9 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
-                  <button className="rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
+                  <NavLink href={"/post/add"} className="rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
                     Add Post
-                  </button>
+                  </NavLink>
                 </div>
               </section>
 
@@ -240,9 +241,9 @@ export default function Dashboard() {
                     </p>
                     <h3 className="text-xl font-semibold">People</h3>
                   </div>
-                  <button className="text-xs font-semibold text-[#7BDFFF]">
+                  <NavLink href={"/chat"} className="text-xs font-semibold text-[#7BDFFF] hover:text-[#7BDFFF]/80 transition-colors">
                     See all
-                  </button>
+                  </NavLink>
                 </div>
 
                 <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
