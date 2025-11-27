@@ -2,6 +2,7 @@
 
 import Image from "next/image"
 import { X } from "lucide-react"
+import Logo from "../../../public/logo.png"
 
 import { useAuth } from "@/contexts/auth-context"
 
@@ -36,7 +37,7 @@ export function LoginModal() {
         </button>
         <div className="flex justify-center">
           <Image
-            src="/tier/avatar.png"
+            src={Logo}
             alt="Login"
             width={96}
             height={96}
