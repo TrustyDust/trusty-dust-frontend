@@ -1,9 +1,11 @@
 'use client'
 
 import Link from "next/link"
+import Image from "next/image"
 import { ComponentType } from "react"
 import { Briefcase, Compass, ShieldCheck } from "lucide-react"
 import { usePathname } from "next/navigation"
+import Logo from "../../../public/logo.png"
 
 import { cn } from "@/lib/utils"
 
@@ -32,9 +34,12 @@ export function SidebarNavCard({ active = "explore" }: Readonly<SidebarNavCardPr
   return (
     <div className="rounded-[28px] border border-white/10 bg-[#040d1e]/90 p-6 backdrop-blur">
       <div className="flex items-center gap-3">
-        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-lg font-bold text-white shadow-[0_0_30px_rgba(66,232,224,0.45)]">
+        {/* <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-lg font-bold text-white shadow-[0_0_30px_rgba(66,232,224,0.45)]">
           TD
-        </div>
+        </div> */}
+        <Image src={Logo} alt="logo" className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-lg font-bold text-white shadow-[0_0_30px_rgba(66,232,224,0.45)]">
+
+        </Image>
         <div>
           <p className="text-xs uppercase tracking-[0.2em] text-gray-400">
             TrustyDust

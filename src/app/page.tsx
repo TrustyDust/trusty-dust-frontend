@@ -159,8 +159,8 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
-                  <NavLink href={"/post/add"} className="rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
-                    Add Post
+                  <NavLink href={"/post"} className="rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
+                    Post
                   </NavLink>
                 </div>
               </section>
