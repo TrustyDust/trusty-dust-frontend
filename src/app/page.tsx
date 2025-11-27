@@ -28,6 +28,8 @@ import { useMyJobsApi } from "@/hooks/api/jobs"
 import type { SocialFeedResponse, UserSuggestion } from "@/types/api"
 import { getErrorMessage } from "@/lib/get-error-message"
 
+const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+
 const composerActions = [
   { label: "Image", icon: ImageIcon },
   { label: "Link", icon: Link2 },
