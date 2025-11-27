@@ -5,6 +5,8 @@ import { Heart, MessageCircle, User } from "lucide-react"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 
+const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+
 const profilePosts = [
   {
     id: 1,
@@ -17,10 +19,10 @@ const profilePosts = [
     likes: 24,
     comments: 2,
     images: [
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
-      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6",
-      "https://images.unsplash.com/photo-1523293832284-4f4a4c5a8b0c",
-      "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429",
+      optimize("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"),
+      optimize("https://images.unsplash.com/photo-1545239351-1141bd82e8a6"),
+      optimize("https://images.unsplash.com/photo-1523293832284-4f4a4c5a8b0c"),
+      optimize("https://images.unsplash.com/photo-1500534314209-a25ddb2bd429"),
     ],
   },
   {

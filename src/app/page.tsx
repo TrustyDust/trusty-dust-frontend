@@ -17,6 +17,8 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 import { NavLink } from "@/components/NavLink"
 
+const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+
 const composerActions = [
   { label: "Image", icon: ImageIcon },
   { label: "Link", icon: Link2 },
@@ -33,9 +35,9 @@ const feedPosts = [
     content:
       "Experimenting with multi-chain credential sharing. TrustyDust makes it effortless to surface provable wins while keeping wallets private.",
     attachments: [
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
-      "https://images.unsplash.com/photo-1545239351-1141bd82e8a6",
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee",
+      optimize("https://images.unsplash.com/photo-1461749280684-dccba630e2f6"),
+      optimize("https://images.unsplash.com/photo-1545239351-1141bd82e8a6"),
+      optimize("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"),
     ],
     likes: 212,
     comments: 54,
@@ -50,10 +52,10 @@ const feedPosts = [
     content:
       "We just shipped a trust-mining bounty. Looking for zk developers who love human-centric UX. Drop your latest build or DM me for briefs.",
     attachments: [
-      "https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e",
-      "https://images.unsplash.com/photo-1451187580459-43490279c0fa",
-      "https://images.unsplash.com/photo-1469474968028-56623f02e42e",
-      "https://images.unsplash.com/photo-1461749280684-dccba630e2f6",
+      optimize("https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e"),
+      optimize("https://images.unsplash.com/photo-1451187580459-43490279c0fa"),
+      optimize("https://images.unsplash.com/photo-1469474968028-56623f02e42e"),
+      optimize("https://images.unsplash.com/photo-1461749280684-dccba630e2f6"),
     ],
     likes: 178,
     comments: 39,

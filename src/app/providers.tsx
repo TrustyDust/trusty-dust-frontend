@@ -10,7 +10,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
 
 import { AuthProvider } from "@/contexts/auth-context"
 import { LoginModal } from "@/components/dashboard/LoginModal"
-import { wagmiConfig } from "@/lib/wagmi"
+import { getWagmiConfig } from "@/lib/wagmi"
 
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
@@ -18,6 +18,8 @@ const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 export function Providers({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
+
   return (
     <QueryClientProvider client={queryClient}>
       <PrivyProvider

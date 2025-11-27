@@ -1,9 +1,23 @@
 "use client"
 
-import { CSSProperties } from "react"
+import { CSSProperties, useMemo } from "react"
 
-const STAR_COUNT = 1000
-const COMET_COUNT = 10
+// Render counts trimmed to lighten DOM/animation load.
+const STAR_COUNT = 320
+const COMET_COUNT = 4
+const RNG_SEED = 42
+
+// Simple deterministic PRNG (mulberry32) so SSR/CSR match.
+function createRandom(seed: number) {
+  return () => {
+    // eslint-disable-next-line no-param-reassign
+    seed |= 0
+    seed = (seed + 0x6D2B79F5) | 0
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
 
 type Comet = {
   id: string
@@ -18,22 +32,6 @@ type Comet = {
   height: number
 }
 
-const comets: Comet[] = Array.from({ length: COMET_COUNT }).map((_, index) => {
-  const travel = 120 + Math.random() * 60
-  return {
-    id: `comet-${index}`,
-    delay: Math.random() * 10,
-    duration: 10 + Math.random() * 12,
-    startX: Math.random() * 40 - 20,
-    startY: Math.random() * 40 - 10,
-    angle: 35 + Math.random() * 5,
-    translateX: travel,
-    translateY: travel / 1.3,
-    width: 220 + Math.random() * 80,
-    height: Math.random() * 1.2 + 0.4,
-  }
-})
-
 type StarStyle = CSSProperties & {
   "--twinkle-opacity"?: string
   "--twinkle-delay"?: string
@@ -44,19 +42,6 @@ type Star = {
   style: StarStyle
 }
 
-const stars: Star[] = Array.from({ length: STAR_COUNT }).map((_, index) => ({
-  id: `star-${index}`,
-  style: {
-    top: `${Math.random() * 100}%`,
-    left: `${Math.random() * 100}%`,
-    width: `${Math.random() * 2 + 1}px`,
-    height: `${Math.random() * 2 + 1}px`,
-    opacity: 0.15 + Math.random() * 0.15,
-    "--twinkle-opacity": `${0.2 + Math.random() * 0.2}`,
-    "--twinkle-delay": `${Math.random() * 2}s`,
-  },
-}))
-
 const cometPalette = [
   "from-cyan-400/80 via-sky-300/40 to-transparent",
   "from-indigo-400/80 via-indigo-300/30 to-transparent",
@@ -64,6 +49,41 @@ const cometPalette = [
 ]
 
 export function CosmicBackground() {
+  const { comets, stars } = useMemo(() => {
+    const rand = createRandom(RNG_SEED)
+
+    const cometList: Comet[] = Array.from({ length: COMET_COUNT }).map((_, index) => {
+      const travel = 120 + rand() * 60
+      return {
+        id: `comet-${index}`,
+        delay: rand() * 10,
+        duration: 10 + rand() * 12,
+        startX: rand() * 40 - 20,
+        startY: rand() * 40 - 10,
+        angle: 35 + rand() * 5,
+        translateX: travel,
+        translateY: travel / 1.3,
+        width: 220 + rand() * 80,
+        height: rand() * 1.2 + 0.4,
+      }
+    })
+
+    const starList: Star[] = Array.from({ length: STAR_COUNT }).map((_, index) => ({
+      id: `star-${index}`,
+      style: {
+        top: `${rand() * 100}%`,
+        left: `${rand() * 100}%`,
+        width: `${rand() * 2 + 1}px`,
+        height: `${rand() * 2 + 1}px`,
+        opacity: 0.15 + rand() * 0.15,
+        "--twinkle-opacity": `${0.2 + rand() * 0.2}`,
+        "--twinkle-delay": `${rand() * 2}s`,
+      },
+    }))
+
+    return { comets: cometList, stars: starList }
+  }, [])
+
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none -z-50">
       <div className="absolute inset-0 bg-linear-to-b from-slate-950 via-slate-900 to-slate-950" />
