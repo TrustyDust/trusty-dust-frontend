@@ -97,7 +97,7 @@ export function DashboardHeader({
 
   return (
     <div className={cn("sticky top-4 z-40", className)}>
-      <div className="flex flex-wrap items-center gap-4 rounded-[24px] border border-white/10 bg-[#030b1e]/80 px-4 py-4 backdrop-blur-2xl shadow-[0_24px_60px_rgba(2,10,31,0.9)] sm:px-6 lg:flex-nowrap">
+      <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-white/10 bg-[#030b1e]/80 px-4 py-4 backdrop-blur-2xl shadow-[0_24px_60px_rgba(2,10,31,0.9)] sm:px-6 lg:flex-nowrap">
         <div className="flex min-w-0 flex-1 items-center gap-3 rounded-[20px] border border-white/5 bg-[#050f22] px-4 py-2">
           <Search className="h-5 w-5 text-gray-400" />
           <input
