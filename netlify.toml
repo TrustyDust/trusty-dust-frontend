@@ -1,14 +1,10 @@
-
 [build]
-command = "npm run build"
+  command = "npm run build"
+  # Do NOT set publish to ".next" manually, the plugin handles the output location.
+  
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
 
-publish = "dist"
-
+# You can keep the Environment config if you need specific node versions
 [build.environment]
-NODE_VERSION = "18"
-
-
-[[redirects]]
-from = "/*"
-to = "/index.html"
-status = 200
+  NODE_VERSION = "22"
