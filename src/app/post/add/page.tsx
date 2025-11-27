@@ -15,6 +15,8 @@ import {
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 
+const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+
 export default function AddPostPage() {
   const [content, setContent] = useState("")
   const [privacy, setPrivacy] = useState("Public")

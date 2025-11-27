@@ -14,6 +14,8 @@ import {
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 
+const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+
 // -----------------------------------------------------------------------------
 // DUMMY DATA
 // -----------------------------------------------------------------------------
@@ -83,10 +85,10 @@ const activeChatMessages = [
         sender: "them",
         text: "Lorem ipsum dolor sit amet consectetur. sit amet consectetur.",
         images: [
-            "https://images.unsplash.com/photo-1620321023374-d1a68fbc720d",
-            "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe",
-            "https://images.unsplash.com/photo-1614728853913-1e32005e30b7",
-            "https://images.unsplash.com/photo-1634152962476-4b8a00e1915c",
+            optimize("https://images.unsplash.com/photo-1620321023374-d1a68fbc720d"),
+            optimize("https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe"),
+            optimize("https://images.unsplash.com/photo-1614728853913-1e32005e30b7"),
+            optimize("https://images.unsplash.com/photo-1634152962476-4b8a00e1915c"),
         ],
         time: "10.02 Am",
     },
