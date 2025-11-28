@@ -4,82 +4,82 @@ export const API_PREFIX = "/api/v1"
 export const API_ROUTES = {
   // Health
   health: {
-    status: `${API_PREFIX}/health`,
-    supabase: `${API_PREFIX}/health/supabase`,
+    status: `${PROXY_BASE_URL}/health`,
+    supabase: `${PROXY_BASE_URL}/health/supabase`,
   },
 
   // Auth
   auth: {
-    login: `${API_PREFIX}/auth/login`,
+    login: `${PROXY_BASE_URL}/auth/login`,
   },
 
   // Users
   users: {
-    me: `${API_PREFIX}/users/me`,
-    update: `${API_PREFIX}/users/me`,
-    searchPeople: `${API_PREFIX}/users/search/people`,
-    suggested: `${API_PREFIX}/users/suggested`,
-    follow: (id: string) => `${API_PREFIX}/users/${id}/follow`,
-    unfollow: (id: string) => `${API_PREFIX}/users/${id}/follow`,
-    profile: (id: string) => `${API_PREFIX}/users/${id}`,
-    profilePosts: (id: string) => `${API_PREFIX}/users/${id}/posts`,
-    profileJobs: (id: string) => `${API_PREFIX}/users/${id}/jobs`,
+    me: `${PROXY_BASE_URL}/users/me`,
+    update: `${PROXY_BASE_URL}/users/me`,
+    searchPeople: `${PROXY_BASE_URL}/users/search/people`,
+    suggested: `${PROXY_BASE_URL}/users/suggested`,
+    follow: (id: string) => `${PROXY_BASE_URL}/users/${id}/follow`,
+    unfollow: (id: string) => `${PROXY_BASE_URL}/users/${id}/follow`,
+    profile: (id: string) => `${PROXY_BASE_URL}/users/${id}`,
+    profilePosts: (id: string) => `${PROXY_BASE_URL}/users/${id}/posts`,
+    profileJobs: (id: string) => `${PROXY_BASE_URL}/users/${id}/jobs`,
   },
 
   // Trust & Tier
   trust: {
-    score: `${API_PREFIX}/trust/score`,
+    score: `${PROXY_BASE_URL}/trust/score`,
   },
   tier: {
-    me: `${API_PREFIX}/tier/me`,
+    me: `${PROXY_BASE_URL}/tier/me`,
   },
 
   // Notifications
   notifications: {
-    list: `${API_PREFIX}/notifications`,
-    markAsRead: (id: string) => `${API_PREFIX}/notifications/${id}/read`,
+    list: `${PROXY_BASE_URL}/notifications`,
+    markAsRead: (id: string) => `${PROXY_BASE_URL}/notifications/${id}/read`,
   },
 
   // Zero Knowledge
   zk: {
-    generate: `${API_PREFIX}/zk/generate`,
-    verify: `${API_PREFIX}/zk/verify`,
+    generate: `${PROXY_BASE_URL}/zk/generate`,
+    verify: `${PROXY_BASE_URL}/zk/verify`,
   },
 
   // Social
   social: {
-    feed: `${API_PREFIX}/social/posts`,
-    createPost: `${API_PREFIX}/social/posts`,
-    postDetail: (id: string) => `${API_PREFIX}/social/posts/${id}`,
-    reactPost: (id: string) => `${API_PREFIX}/social/posts/${id}/react`,
-    boostPost: (id: string) => `${API_PREFIX}/social/posts/${id}/boost`,
+    feed: `${PROXY_BASE_URL}/social/posts`,
+    createPost: `${PROXY_BASE_URL}/social/posts`,
+    postDetail: (id: string) => `${PROXY_BASE_URL}/social/posts/${id}`,
+    reactPost: (id: string) => `${PROXY_BASE_URL}/social/posts/${id}/react`,
+    boostPost: (id: string) => `${PROXY_BASE_URL}/social/posts/${id}/boost`,
   },
 
   // Jobs
   jobs: {
-    myJobs: `${API_PREFIX}/jobs/me`,
-    myApplications: `${API_PREFIX}/jobs/applications/me`,
-    applicants: (id: string) => `${API_PREFIX}/jobs/${id}/applicants`,
-    search: `${API_PREFIX}/jobs/search`,
-    hot: `${API_PREFIX}/jobs/hot`,
-    create: `${API_PREFIX}/jobs/create`,
-    apply: (id: string) => `${API_PREFIX}/jobs/${id}/apply`,
-    submitWork: (id: string) => `${API_PREFIX}/jobs/application/${id}/submit`,
-    confirmWork: (id: string) => `${API_PREFIX}/jobs/application/${id}/confirm`,
+    myJobs: `${PROXY_BASE_URL}/jobs/me`,
+    myApplications: `${PROXY_BASE_URL}/jobs/applications/me`,
+    applicants: (id: string) => `${PROXY_BASE_URL}/jobs/${id}/applicants`,
+    search: `${PROXY_BASE_URL}/jobs/search`,
+    hot: `${PROXY_BASE_URL}/jobs/hot`,
+    create: `${PROXY_BASE_URL}/jobs/create`,
+    apply: (id: string) => `${PROXY_BASE_URL}/jobs/${id}/apply`,
+    submitWork: (id: string) => `${PROXY_BASE_URL}/jobs/application/${id}/submit`,
+    confirmWork: (id: string) => `${PROXY_BASE_URL}/jobs/application/${id}/confirm`,
   },
 
   // Chat
   chat: {
-    conversations: `${API_PREFIX}/chat/conversations`,
+    conversations: `${PROXY_BASE_URL}/chat/conversations`,
     conversationMessages: (conversationId: string) =>
-      `${API_PREFIX}/chat/conversations/${conversationId}/messages`,
-    sendMessage: `${API_PREFIX}/chat/messages`,
+      `${PROXY_BASE_URL}/chat/conversations/${conversationId}/messages`,
+    sendMessage: `${PROXY_BASE_URL}/chat/messages`,
   },
 
   // Wallet Reputation
   walletReputation: {
-    analyze: `${API_PREFIX}/wallet-reputation/analyze`,
-    latest: (address: string) => `${API_PREFIX}/wallet-reputation/${address}`,
+    analyze: `${PROXY_BASE_URL}/wallet-reputation/analyze`,
+    latest: (address: string) => `${PROXY_BASE_URL}/wallet-reputation/${address}`,
   },
 } as const
 
