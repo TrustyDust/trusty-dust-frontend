@@ -1,31 +1,24 @@
 // src/hooks/useSocial.ts
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { get, post } from "@/lib/http-client";
+import {
+  useFeedApi,
+  useCreatePostApi,
+  usePostDetailApi,
+  useReactPostApi,
+  useBoostPostApi,
+} from "./api/social"
 
-export const useFeed = () =>
-    useQuery({
-        queryKey: ["social-feed"],
-        queryFn: () => get("/api/v1/social/posts"),
-    });
+export const useSocialViewModel = (postId?: string) => {
+  const feed = useFeedApi()
+  const createPost = useCreatePostApi()
+  const postDetail = usePostDetailApi(postId ?? "")
+  const reactPost = useReactPostApi()
+  const boostPost = useBoostPostApi()
 
-export const useCreatePost = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/social/posts", body),
-    });
+  return { feed, createPost, postDetail, reactPost, boostPost }
+}
 
-export const usePostDetail = (id: string) =>
-    useQuery({
-        queryKey: ["post-detail", id],
-        queryFn: () => get(`/api/v1/social/posts/${id}`),
-        enabled: !!id,
-    });
-
-export const useReactPost = (id: string) =>
-    useMutation({
-        mutationFn: (body: any) => post(`/api/v1/social/posts/${id}/react`, body),
-    });
-
-export const useBoostPost = (id: string) =>
-    useMutation({
-        mutationFn: () => post(`/api/v1/social/posts/${id}/boost`),
-    });
+export const useFeed = useFeedApi
+export const useCreatePost = useCreatePostApi
+export const usePostDetail = usePostDetailApi
+export const useReactPost = useReactPostApi
+export const useBoostPost = useBoostPostApi
