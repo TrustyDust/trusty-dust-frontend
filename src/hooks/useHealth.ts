@@ -1,8 +1,11 @@
 // src/hooks/useHealth.ts
-import { useApiQuery } from "./factory";
+import { useApiHealthStatus, useSupabaseHealthApi } from "./api/health"
 
-export const useApiHealth = () =>
-    useApiQuery(["health-api"], "/api/v1/health");
+export const useHealthViewModel = () => {
+  const apiHealth = useApiHealthStatus()
+  const supabase = useSupabaseHealthApi()
+  return { apiHealth, supabase }
+}
 
-export const useSupabaseHealth = () =>
-    useApiQuery(["health-supabase"], "/api/v1/health/supabase");
+export const useApiHealth = useApiHealthStatus
+export const useSupabaseHealth = useSupabaseHealthApi

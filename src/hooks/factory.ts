@@ -1,30 +1,36 @@
 // src/hooks/factory.ts
-import { useQuery, useMutation, UseQueryOptions, UseMutationOptions } from "@tanstack/react-query";
-import { get, post, patch, del } from "@/lib/http-client";
+import {
+  useQuery,
+  useMutation,
+  UseQueryOptions,
+  UseMutationOptions,
+  QueryKey,
+} from "@tanstack/react-query"
+import { get, post, patch, del } from "@/lib/http-client"
 
-export const useApiQuery = <T>(
-    key: any[],
-    endpoint: string,
-    options?: UseQueryOptions<T>
+export const useApiQuery = <TData>(
+  key: QueryKey,
+  endpoint: string,
+  options?: UseQueryOptions<TData, Error, TData, QueryKey>,
 ) => {
-    return useQuery<T>({
-        queryKey: key,
-        queryFn: () => get<T>(endpoint),
-        ...options,
-    });
-};
+  return useQuery<TData, Error>({
+    queryKey: key,
+    queryFn: () => get<TData>(endpoint),
+    ...options,
+  })
+}
 
-export const useApiMutation = <T, B = any>(
-    method: "post" | "patch" | "delete",
-    endpoint: string,
-    options?: UseMutationOptions<T, unknown, B>
+export const useApiMutation = <TData, TVariables = void>(
+  method: "post" | "patch" | "delete",
+  endpoint: string,
+  options?: UseMutationOptions<TData, Error, TVariables>,
 ) => {
-    return useMutation<T, unknown, B>({
-        mutationFn: (body: B) => {
-            if (method === "post") return post<T>(endpoint, body);
-            if (method === "patch") return patch<T>(endpoint, body);
-            return del<T>(endpoint);
-        },
-        ...options,
-    });
-};
+  return useMutation<TData, Error, TVariables>({
+    mutationFn: (variables: TVariables) => {
+      if (method === "post") return post<TData>(endpoint, variables)
+      if (method === "patch") return patch<TData>(endpoint, variables)
+      return del<TData>(endpoint)
+    },
+    ...options,
+  })
+}

@@ -1,13 +1,11 @@
 // src/hooks/useZK.ts
-import { useMutation } from "@tanstack/react-query";
-import { post } from "@/lib/http-client";
+import { useGenerateProofApi, useVerifyProofApi } from "./api/zk"
 
-export const useGenerateProof = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/zk/generate", body),
-    });
+export const useZKViewModel = () => {
+  const generateProof = useGenerateProofApi()
+  const verifyProof = useVerifyProofApi()
+  return { generateProof, verifyProof }
+}
 
-export const useVerifyProof = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/zk/verify", body),
-    });
+export const useGenerateProof = useGenerateProofApi
+export const useVerifyProof = useVerifyProofApi
