@@ -64,6 +64,30 @@ async function proxyRequest(
     body: bodyContent,
   })
 
+  const statusCodesWithoutBody = [204, 304]
+  const hasNoBody = statusCodesWithoutBody.includes(fetchResponse.status)
+
+  if (hasNoBody) {
+    const noBodyHeaders = new Headers()
+    fetchResponse.headers.forEach((value, key) => {
+      const skipHeaders = [
+        "content-encoding",
+        "content-length",
+        "transfer-encoding",
+        "content-type",
+      ]
+      if (skipHeaders.includes(key.toLowerCase())) {
+        return
+      }
+      noBodyHeaders.set(key, value)
+    })
+    return new Response(null, {
+      status: fetchResponse.status,
+      statusText: fetchResponse.statusText,
+      headers: noBodyHeaders,
+    })
+  }
+
   const responseHeaders = new Headers()
   fetchResponse.headers.forEach((value, key) => {
     const skipHeaders = [
