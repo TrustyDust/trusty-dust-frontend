@@ -196,6 +196,7 @@ export default function ProfilePage() {
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#030714]/85 px-4 py-6 text-white sm:px-6 lg:px-8">
+      {/* --- Background Layer --- */}
       <div className="pointer-events-none absolute inset-0 opacity-80">
         <div className="absolute inset-0 bg-gradient-to-br from-[#050C24] via-[#060A1B] to-[#0A0F1D]" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,163,255,0.35),_transparent_45%)]" />
@@ -206,11 +207,14 @@ export default function ProfilePage() {
         <DashboardHeader/>
 
         <div className="flex flex-col gap-6 lg:flex-row">
+          {/* Sidebar */}
           <aside className="hidden w-60 shrink-0 lg:flex xl:w-64">
             <DashboardSidebar activeNav="verify" boostScore={user?.trustScore ?? 0} />
           </aside>
 
+          {/* MAIN CONTENT */}
           <main className="flex-1 space-y-6">
+            {/* Profile Header */}
             <section className="rounded-[32px] border border-white/10 bg-[#030b1e]/90 p-6 shadow-[0_20px_60px_rgba(5,8,20,0.8)] backdrop-blur">
               {userLoading ? (
                 <div className="h-52 animate-pulse rounded-[28px] bg-[#04112b]" />
@@ -371,6 +375,7 @@ export default function ProfilePage() {
             </section>
           </main>
 
+          {/* RIGHT SIDEBAR */}
           <aside className="w-full shrink-0 space-y-6 lg:w-72 xl:w-80">
               <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
               <div className="flex items-center gap-3">
