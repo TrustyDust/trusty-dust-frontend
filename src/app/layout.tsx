@@ -2,7 +2,7 @@ import type { Metadata } from "next"
 import "../css/globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
 import { CosmicBackground } from "@/components/CosmicBackground"
-import { Providers } from "./providers"
+import { ProvidersWrapper } from "./providers-wrapper"
 
 export const metadata: Metadata = {
   title: "Trusty Dust",
@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
         <CosmicBackground />
-        <Providers>{children}</Providers>
+        <ProvidersWrapper>{children}</ProvidersWrapper>
       </body>
     </html>
   )
