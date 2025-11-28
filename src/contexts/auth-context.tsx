@@ -62,7 +62,7 @@ export function AuthProvider({
     user: privyUser,
     authenticated,
     signMessage: privySignMessage,
-    logout: privyLogout
+    logout: privyLogout,
   } = usePrivy()
 
   const openLoginModal = useCallback(() => setShowLoginModal(true), [])
@@ -109,6 +109,39 @@ export function AuthProvider({
 
         if (!address || !isConnected || isAuthenticated || loginApi.isPending || valid) return
 
+      // Don't trigger login if disconnecting
+      if (isDisconnecting.current) {
+        return
+      }
+
+      const storedJwt =
+        initialJwt ??
+        (typeof document === "undefined"
+          ? null
+          : document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("jwt="))
+              ?.split("=")[1] ?? null)
+
+      const valid = checkExpiration(storedJwt)
+
+      // Early return if conditions not met
+      if (
+        !address ||
+        !isConnected ||
+        isAuthenticated ||
+        loginApi.isPending ||
+        valid ||
+        isLoggingOut
+      ) {
+        return
+      }
+
+      // Set processing flag to prevent multiple calls
+      isProcessingRainbowLogin.current = true
+      setConnecting("rainbow")
+
+      try {
         const signature = await signMessageAsync({
           message: AUTH_MESSAGE,
           account: address,
@@ -127,14 +160,28 @@ export function AuthProvider({
         toast.success('sign in success')
         router.replace(ROUTES.home)
       } catch (error) {
+        const isUserRejected = isUserRejectedError(error)
+
         setIsAuthenticated(false)
         disconnect()
 
-        const message = `Rainbow login failed : ${error}`
-        console.error(message)
-        toast.error(message)
+        // Clear JWT from cookies on login failure
+        if (typeof document !== "undefined") {
+          document.cookie = "jwt=; Max-Age=0; path=/"
+          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+        }
+
+        // Don't show toast for user rejection - it's expected behavior
+        if (isUserRejected) {
+          console.log("User rejected the sign message request")
+        } else {
+          const message = `Rainbow login failed : ${error}`
+          console.error(message)
+          toast.error(message)
+        }
       } finally {
         setConnecting(null)
+        isProcessingRainbowLogin.current = false
       }
     }
 
@@ -169,7 +216,7 @@ export function AuthProvider({
         const res = await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
-          message: AUTH_MESSAGE
+          message: AUTH_MESSAGE,
         })
 
         setIsAuthenticated(true)
@@ -179,14 +226,28 @@ export function AuthProvider({
         toast.success('sign in success')
         router.replace(ROUTES.home)
       } catch (error) {
+        const isUserRejected = isUserRejectedError(error)
+
         setIsAuthenticated(false)
         privyLogout()
 
-        const message = `Privy login failed : ${error}`
-        console.error(message)
-        toast.error(message)
+        // Clear JWT from cookies on login failure
+        if (typeof document !== "undefined") {
+          document.cookie = "jwt=; Max-Age=0; path=/"
+          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+        }
+
+        // Don't show toast for user rejection - it's expected behavior
+        if (isUserRejected) {
+          console.log("User rejected the sign message request")
+        } else {
+          const message = `Privy login failed : ${error}`
+          console.error(message)
+          toast.error(message)
+        }
       } finally {
         setConnecting(null)
+        isProcessingPrivyLogin.current = false
       }
     }
 
@@ -194,6 +255,10 @@ export function AuthProvider({
   }, [authenticated, isAuthenticated, loginApi, loginApi.isPending, privySignMessage, privyUser, router, privyLogout])
 
   const logout = useCallback(async () => {
+    // Set disconnect flag to prevent re-sign message
+    isDisconnecting.current = true
+    setIsLoggingOut(true)
+
     try {
       await privyLogout()
       disconnect()
@@ -210,13 +275,14 @@ export function AuthProvider({
       setIsAuthenticated(false)
       setWalletAddress(null)
     }
-  }, [disconnect, privyLogout])
+  }, [disconnect, privyLogout, router])
 
   const value = useMemo<AuthContextType>(
     () => ({
       isAuthenticated,
       walletAddress,
       connecting,
+      isLoggingOut,
       showLoginModal,
       openLoginModal,
       closeLoginModal,
@@ -230,11 +296,12 @@ export function AuthProvider({
       connectWithRainbow,
       connecting,
       isAuthenticated,
+      isLoggingOut,
       logout,
       openLoginModal,
       showLoginModal,
       walletAddress,
-    ],
+    ]
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
@@ -252,11 +319,12 @@ export type AuthContextType = {
   isAuthenticated: boolean
   walletAddress: string | null
   connecting: "rainbow" | "privy" | null
+  isLoggingOut: boolean
   showLoginModal: boolean
 
   openLoginModal: () => void
   closeLoginModal: () => void
-  connectWithRainbow?: (() => void) | undefined
+  connectWithRainbow: (() => void) | undefined
   connectWithPrivy: () => void
-  logout: () => void
+  logout: () => Promise<void>
 }
