@@ -1,58 +1,33 @@
 // src/hooks/useUser.ts
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { get, patch, post, del } from "@/lib/http-client";
+import {
+  useMeApi,
+  useUpdateMeApi,
+  useSearchPeopleApi,
+  useSuggestedUsersApi,
+  useFollowUserApi,
+  useUnfollowUserApi,
+  usePublicProfileApi,
+  useUserPostsApi,
+  useUserJobsApi,
+} from "./api/user"
 
-export const useMe = () =>
-    useQuery({
-        queryKey: ["me"],
-        queryFn: () => get("/api/v1/users/me"),
-    });
+export const useUserViewModel = (id?: string, query?: string) => {
+  const me = useMeApi()
+  const suggested = useSuggestedUsersApi()
+  const profile = usePublicProfileApi(id ?? "")
+  const posts = useUserPostsApi(id ?? "")
+  const jobs = useUserJobsApi(id ?? "")
+  const search = useSearchPeopleApi(query ?? "")
 
-export const useUpdateMe = () =>
-    useMutation({
-        mutationFn: (body: any) => patch("/api/v1/users/me", body),
-    });
+  return { me, suggested, profile, posts, jobs, search }
+}
 
-export const useSearchPeople = (query: string) =>
-    useQuery({
-        queryKey: ["search-people", query],
-        queryFn: () => get(`/api/v1/users/search/people?q=${query}`),
-        enabled: !!query,
-    });
-
-export const useSuggestedUsers = () =>
-    useQuery({
-        queryKey: ["suggested-users"],
-        queryFn: () => get("/api/v1/users/suggested"),
-    });
-
-export const useFollowUser = (id: string) =>
-    useMutation({
-        mutationFn: () => post(`/api/v1/users/${id}/follow`),
-    });
-
-export const useUnfollowUser = (id: string) =>
-    useMutation({
-        mutationFn: () => del(`/api/v1/users/${id}/follow`),
-    });
-
-export const usePublicProfile = (id: string) =>
-    useQuery({
-        queryKey: ["user-public", id],
-        queryFn: () => get(`/api/v1/users/${id}`),
-        enabled: !!id,
-    });
-
-export const useUserPosts = (id: string) =>
-    useQuery({
-        queryKey: ["user-posts", id],
-        queryFn: () => get(`/api/v1/users/${id}/posts`),
-        enabled: !!id,
-    });
-
-export const useUserJobs = (id: string) =>
-    useQuery({
-        queryKey: ["user-jobs", id],
-        queryFn: () => get(`/api/v1/users/${id}/jobs`),
-        enabled: !!id,
-    });
+export const useMe = useMeApi
+export const useUpdateMe = useUpdateMeApi
+export const useSearchPeople = useSearchPeopleApi
+export const useSuggestedUsers = useSuggestedUsersApi
+export const useFollowUser = useFollowUserApi
+export const useUnfollowUser = useUnfollowUserApi
+export const usePublicProfile = usePublicProfileApi
+export const useUserPosts = useUserPostsApi
+export const useUserJobs = useUserJobsApi

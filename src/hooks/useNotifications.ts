@@ -1,14 +1,10 @@
 // src/hooks/useNotifications.ts
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { get, patch } from "@/lib/http-client";
+import { useNotificationsApi, useMarkNotificationReadApi } from "./api/notifications"
 
-export const useNotifications = () =>
-    useQuery({
-        queryKey: ["notifications"],
-        queryFn: () => get("/api/v1/notifications"),
-    });
+export const useNotificationsViewModel = () => {
+  const notifications = useNotificationsApi()
+  return { notifications }
+}
 
-export const useMarkNotificationRead = (id: string) =>
-    useMutation({
-        mutationFn: () => patch(`/api/v1/notifications/${id}/read`),
-    });
+export const useNotifications = useNotificationsApi
+export const useMarkNotificationRead = useMarkNotificationReadApi

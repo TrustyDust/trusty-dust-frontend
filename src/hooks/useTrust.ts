@@ -1,5 +1,9 @@
 // src/hooks/useTrust.ts
-import { useApiQuery } from "./factory";
+import { useTrustScoreApi } from "./api/trust"
 
-export const useTrustScore = () =>
-    useApiQuery(["trust-score"], "/api/v1/trust/score");
+export const useTrustViewModel = () => {
+  const trustScore = useTrustScoreApi()
+  return { trustScore }
+}
+
+export const useTrustScore = useTrustScoreApi

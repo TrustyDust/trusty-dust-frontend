@@ -1,8 +1,9 @@
 // src/hooks/useAuth.ts
-import { useApiMutation } from "./factory";
+import { useLoginApi } from "./api/auth"
 
-export const useLogin = () =>
-    useApiMutation<{ jwt: string; data: any }, { walletAddress: string; signature: string; message: string }>(
-        "post",
-        "/api/v1/auth/login"
-    );
+export const useAuthViewModel = () => {
+  const login = useLoginApi()
+  return { login }
+}
+
+export const useLogin = useLoginApi

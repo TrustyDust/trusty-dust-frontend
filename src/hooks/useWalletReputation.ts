@@ -1,15 +1,11 @@
 // src/hooks/useWalletReputation.ts
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { get, post } from "@/lib/http-client";
+import { useAnalyzeWalletApi, useWalletSnapshotApi } from "./api/walletReputation"
 
-export const useAnalyzeWallet = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/wallet-reputation/analyze", body),
-    });
+export const useWalletReputationViewModel = (address?: string) => {
+  const analyze = useAnalyzeWalletApi()
+  const snapshot = useWalletSnapshotApi(address ?? "")
+  return { analyze, snapshot }
+}
 
-export const useWalletSnapshot = (address: string) =>
-    useQuery({
-        queryKey: ["wallet-reputation", address],
-        queryFn: () => get(`/api/v1/wallet-reputation/${address}`),
-        enabled: !!address,
-    });
+export const useAnalyzeWallet = useAnalyzeWalletApi
+export const useWalletSnapshot = useWalletSnapshotApi

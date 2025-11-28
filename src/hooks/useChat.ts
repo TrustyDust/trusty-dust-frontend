@@ -1,26 +1,20 @@
 // src/hooks/useChat.ts
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { get, post } from "@/lib/http-client";
+import {
+  useConversationsApi,
+  useCreateConversationApi,
+  useMessagesApi,
+  useSendMessageApi,
+} from "./api/chat"
 
-export const useConversations = () =>
-    useQuery({
-        queryKey: ["chat-conversations"],
-        queryFn: () => get("/api/v1/chat/conversations"),
-    });
+export const useChatViewModel = () => {
+  const conversations = useConversationsApi()
+  const createConversation = useCreateConversationApi()
+  const sendMessage = useSendMessageApi()
 
-export const useCreateConversation = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/chat/conversations", body),
-    });
+  return { conversations, createConversation, sendMessage }
+}
 
-export const useMessages = (conversationId: string) =>
-    useQuery({
-        queryKey: ["chat-messages", conversationId],
-        queryFn: () => get(`/api/v1/chat/conversations/${conversationId}/messages`),
-        enabled: !!conversationId,
-    });
-
-export const useSendMessage = () =>
-    useMutation({
-        mutationFn: (body: any) => post("/api/v1/chat/messages", body),
-    });
+export const useConversations = useConversationsApi
+export const useCreateConversation = useCreateConversationApi
+export const useMessages = useMessagesApi
+export const useSendMessage = useSendMessageApi

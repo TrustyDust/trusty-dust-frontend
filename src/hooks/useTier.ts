@@ -1,5 +1,9 @@
 // src/hooks/useTier.ts
-import { useApiQuery } from "./factory";
+import { useTierHistoryApi } from "./api/tier"
 
-export const useTierHistory = () =>
-    useApiQuery(["tier-history"], "/api/v1/tier/me");
+export const useTierViewModel = () => {
+  const tier = useTierHistoryApi()
+  return { tier }
+}
+
+export const useTierHistory = useTierHistoryApi
