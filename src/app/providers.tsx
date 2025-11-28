@@ -19,6 +19,11 @@ interface AuthContextType {
   logout: () => void;
 }
 
+interface AuthContextType {
+  isAuthenticated: boolean;
+  logout: () => void;
+}
+
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 

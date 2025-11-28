@@ -207,6 +207,51 @@ export function AuthProvider({
       setConnecting("rainbow")
 
       try {
+        const storedJwt =
+          initialJwt ??
+          (
+            typeof document !== "undefined"
+              ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+              : null
+          )
+
+        const valid = checkExpiration(storedJwt)
+
+        if (!address || !isConnected || isAuthenticated || loginApi.isPending || valid) return
+
+      // Don't trigger login if disconnecting
+      if (isDisconnecting.current) {
+        return
+      }
+
+      const storedJwt =
+        initialJwt ??
+        (typeof document === "undefined"
+          ? null
+          : document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("jwt="))
+              ?.split("=")[1] ?? null)
+
+      const valid = checkExpiration(storedJwt)
+
+      // Early return if conditions not met
+      if (
+        !address ||
+        !isConnected ||
+        isAuthenticated ||
+        loginApi.isPending ||
+        valid ||
+        isLoggingOut
+      ) {
+        return
+      }
+
+      // Set processing flag to prevent multiple calls
+      isProcessingRainbowLogin.current = true
+      setConnecting("rainbow")
+
+      try {
         const signature = await signMessageAsync({
           message: AUTH_MESSAGE,
           account: address as Address,
@@ -420,20 +465,6 @@ export function AuthProvider({
       }, 1000)
     }
   }, [disconnect, privyLogout, router])
-
-  const connectWithPrivy = () => {
-    connectWithPrivyOrigin()
-  }
-
-  const connectWithRainbow = () => {
-    if (isConnected) {
-      disconnect()
-      openConnectModal && openConnectModal()
-    } else {
-      openConnectModal && openConnectModal()
-    }
-  }
-
 
   const value = useMemo<AuthContextType>(
     () => ({
