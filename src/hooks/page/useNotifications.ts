@@ -1,5 +1,5 @@
 // src/hooks/useNotifications.ts
-import { useNotificationsApi, useMarkNotificationReadApi } from "./api/notifications"
+import { useNotificationsApi, useMarkNotificationReadApi } from "../api/notifications"
 
 export const useNotificationsViewModel = () => {
   const notifications = useNotificationsApi()

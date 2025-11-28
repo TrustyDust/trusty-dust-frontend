@@ -9,7 +9,7 @@ import {
   usePublicProfileApi,
   useUserPostsApi,
   useUserJobsApi,
-} from "./api/user"
+} from "../api/user"
 
 export const useUserViewModel = (id?: string, query?: string) => {
   const me = useMeApi()

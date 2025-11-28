@@ -1,5 +1,5 @@
 // src/hooks/useHealth.ts
-import { useApiHealthStatus, useSupabaseHealthApi } from "./api/health"
+import { useApiHealthStatus, useSupabaseHealthApi } from "../api/health"
 
 export const useHealthViewModel = () => {
   const apiHealth = useApiHealthStatus()

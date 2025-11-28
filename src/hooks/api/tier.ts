@@ -1,4 +1,4 @@
-import { useApiQuery } from "../factory"
+import { useApiQuery } from "../page/factory"
 import { API_ROUTES } from "@/constant/api"
 import type { TierResponse } from "@/types/api"
 

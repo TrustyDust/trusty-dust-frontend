@@ -4,7 +4,7 @@ import {
   useCreateConversationApi,
   useMessagesApi,
   useSendMessageApi,
-} from "./api/chat"
+} from "../api/chat"
 
 export const useChatViewModel = () => {
   const conversations = useConversationsApi()

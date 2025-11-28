@@ -1,5 +1,5 @@
 // src/hooks/useSocial.ts
-import { useFeedApi, useCreatePostApi, usePostDetailApi, useReactPostApi, useBoostPostApi } from "./api/social"
+import { useFeedApi, useCreatePostApi, usePostDetailApi, useReactPostApi, useBoostPostApi } from "../api/social"
 
 export const useSocialViewModel = () => {
   const feed = useFeedApi()

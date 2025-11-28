@@ -1,5 +1,5 @@
 // src/hooks/useTrust.ts
-import { useTrustScoreApi } from "./api/trust"
+import { useTrustScoreApi } from "../api/trust"
 
 export const useTrustViewModel = () => {
   const trustScore = useTrustScoreApi()

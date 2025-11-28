@@ -1,5 +1,5 @@
 // src/hooks/useWalletReputation.ts
-import { useAnalyzeWalletApi, useWalletSnapshotApi } from "./api/walletReputation"
+import { useAnalyzeWalletApi, useWalletSnapshotApi } from "../api/walletReputation"
 
 export const useWalletReputationViewModel = (address?: string) => {
   const analyze = useAnalyzeWalletApi()

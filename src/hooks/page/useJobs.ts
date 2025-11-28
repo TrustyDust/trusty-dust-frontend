@@ -9,7 +9,7 @@ import {
   useApplyJobApi,
   useSubmitWorkApi,
   useConfirmWorkApi,
-} from "./api/jobs"
+} from "../api/jobs"
 
 export const useJobsViewModel = () => {
   const myJobs = useMyJobsApi()
