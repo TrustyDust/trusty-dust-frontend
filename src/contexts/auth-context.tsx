@@ -20,7 +20,7 @@ import { toast } from "sonner"
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)

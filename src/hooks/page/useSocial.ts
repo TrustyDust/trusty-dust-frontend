@@ -1,7 +1,7 @@
-// src/hooks/useSocial.ts
+
 import { useFeedApi, useCreatePostApi, usePostDetailApi, useReactPostApi, useBoostPostApi } from "../api/social"
 
-export const useSocialViewModel = () => {
+export default function useSocialViewModel () {
   const feed = useFeedApi()
   const createPost = useCreatePostApi()
   return { feed, createPost }

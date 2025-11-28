@@ -76,7 +76,7 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
         ...fetchOptions
     } = options;
 
-    const url = buildUrl(endpoint);
+    const url = endpoint
 
     const token = typeof window !== "undefined" ? localStorage.getItem("jwt") : null;
 
