@@ -1,4 +1,3 @@
-// src/hooks/useAuth.ts
 import { useLoginApi } from "../api/auth"
 
 export const useAuthViewModel = () => {

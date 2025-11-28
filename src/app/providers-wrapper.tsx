@@ -8,6 +8,6 @@ const ProvidersNoSSR = dynamic(() => import("./providers").then((m) => m.Provide
   ssr: false,
 })
 
-export function ProvidersWrapper({ children }: PropsWithChildren) {
+export function ProvidersWrapper({ children }: Readonly<PropsWithChildren>) {
   return <ProvidersNoSSR>{children}</ProvidersNoSSR>
 }

@@ -5,6 +5,7 @@ import { ChevronDown, Smile, Users } from "lucide-react"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import Image from "next/image"
 
 const trustMetrics = [
   { label: "Transaction history", value: 90 },
@@ -152,9 +153,11 @@ export default function VerifyPage() {
                     <div className="flex flex-1 flex-col gap-4 rounded-[24px p-6">
                       <div className="flex items-center gap-4">
                         <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white ">
-                          <img
+                          <Image
                             src="/tier/spark.svg"
                             alt="Spark Tier"
+                            width={176}
+                            height={176}
                             className="h-44 w-44"
                           />
                         </div>
@@ -215,10 +218,12 @@ export default function VerifyPage() {
                   <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 items-center justify-center rounded-full">
-                        <img
+                        <Image
                           src="/tier/spark.svg"
                           alt="Spark badge"
                           className="h-24 w-24"
+                          width={96}
+                          height={96}
                         />
                       </div>
                       <div>
@@ -292,15 +297,19 @@ export default function VerifyPage() {
                       >
                         <div className="flex items-center gap-4">
                           <div className="relative">
-                            <img
+                            <Image
                               src={person.avatar}
                               alt={person.name}
                               className="h-14 w-14 rounded-full border border-white/10 object-cover"
+                              width={56}
+                              height={56}
                             />
-                            <img
+                            <Image
                               src={person.badge}
                               alt="badge"
                               className="absolute -bottom-1 -right-1 h-6 w-6"
+                              width={24}
+                              height={24}
                             />
                           </div>
                           <div>
@@ -336,10 +345,12 @@ export default function VerifyPage() {
                           className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-3 py-3"
                         >
                           <div className="flex items-center gap-3">
-                            <img
+                            <Image
                               src={talent.avatar}
                               alt={talent.name}
                               className="h-10 w-10 rounded-full border border-white/10"
+                              width={40}
+                              height={40}
                             />
                             <div>
                               <p className="text-sm font-semibold">
