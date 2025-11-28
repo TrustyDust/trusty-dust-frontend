@@ -9,7 +9,7 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -69,6 +69,29 @@ export function AuthProvider({
   const openLoginModal = useCallback(() => setShowLoginModal(true), [])
   const closeLoginModal = useCallback(() => setShowLoginModal(false), [])
 
+  useEffect(() => {
+    const storedJwt =
+      initialJwt ??
+      (
+        typeof document !== "undefined"
+          ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+          : null
+      )
+
+    const valid = checkExpiration(storedJwt)
+    if (!valid && storedJwt) {
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        router.replace(ROUTES.signIn)
+      }
+      return
+    }
+    if (valid) {
+      setIsAuthenticated(true)
+    }
+  }, [initialJwt, router])
+
+  // Initial JWT check from cookies (server -> client)
   useEffect(() => {
     const storedJwt =
       initialJwt ??
