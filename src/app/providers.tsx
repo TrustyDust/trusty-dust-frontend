@@ -11,7 +11,6 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
 import { AuthProvider } from "@/contexts/auth-context"
 import { LoginModal } from "@/components/dashboard/LoginModal"
 import { getWagmiConfig } from "@/lib/wagmi"
-import { setupErrorHandler } from "@/lib/error-handler"
 
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
@@ -20,12 +19,7 @@ export function Providers({
   children,
   initialJwt,
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
-  const wagmiConfig = useMemo(() => getWagmiConfig(), [])
-
-  // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
-  useEffect(() => {
-    setupErrorHandler()
-  }, [])
+  const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
 
   return (
     <QueryClientProvider client={queryClient}>
