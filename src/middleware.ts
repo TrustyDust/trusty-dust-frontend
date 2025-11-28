@@ -21,12 +21,20 @@ export async function middleware(request: NextRequest) {
         NextResponse.redirect(new URL(url, request.url));
 
     if (pathname === "/") {
-        if (!jwt) return redirect(signIn);
-        return NextResponse.next();
+        if (jwt) {
+            return redirect(home);
+        } else {
+            return redirect(signIn);
+        }
     }
 
-    if (jwt && isPublicPage) return redirect(home);
-    if (!jwt && !isPublicPage) return redirect(signIn);
+    if (jwt && isPublicPage) {
+        return redirect(home);
+    }
+
+    if (!jwt && !isPublicPage) {
+        return redirect(signIn);
+    }
 
     return NextResponse.next();
 }
