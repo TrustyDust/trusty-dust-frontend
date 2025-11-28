@@ -26,14 +26,19 @@ export async function middleware(request: NextRequest) {
 
     if (pathname === "/") {
         if (jwt) {
-            return NextResponse.next();
+            return redirect(home);
         } else {
             return redirect(signIn);
         }
     }
 
-    if (jwt && isPublicPage) return redirect(home);
-    if (!jwt && !isPublicPage) return redirect(signIn);
+    if (jwt && isPublicPage) {
+        return redirect(home);
+    }
+
+    if (!jwt && !isPublicPage) {
+        return redirect(signIn);
+    }
 
     return NextResponse.next();
 }
