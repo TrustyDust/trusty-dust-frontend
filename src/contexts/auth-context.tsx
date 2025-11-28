@@ -10,23 +10,47 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
 import { Address } from "viem"
 import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+import { ROUTES } from "@/constant/route"
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
-export function AuthProvider({ children }: Readonly<{ children: React.ReactNode }>) {
+const checkExpiration = (jwt: string | null | undefined) => {
+  try {
+    if (!jwt) return false
+    const payloadBase64 = jwt.split(".")[1]
+    if (!payloadBase64) return false
+
+    const decodedPayload = JSON.parse(atob(payloadBase64))
+    const exp = decodedPayload.exp
+    if (!exp) return false
+
+    const now = Math.floor(Date.now() / 1000)
+    return now < exp
+  } catch (error) {
+    console.warn("Invalid JWT:", error)
+    return false
+  }
+}
+
+export function AuthProvider({
+  children,
+  initialJwt,
+}: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
+  const router = useRouter()
+  const loginApi = useLoginApi()
+
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
-
-  const loginApi = useLoginApi()
 
   const { openConnectModal: connectWithRainbow } = useConnectModal();
   const { address, isConnected } = useConnection()
@@ -47,17 +71,50 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     connectWithPrivyOrigin()
   }
 
+  // Initial JWT check from cookies (server -> client)
+  useEffect(() => {
+    const storedJwt =
+      initialJwt ??
+      (
+        typeof document !== "undefined"
+          ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+          : null
+      )
+
+    const valid = checkExpiration(storedJwt)
+    if (!valid && storedJwt) {
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        router.replace(ROUTES.signIn)
+      }
+      return
+    }
+    if (valid) {
+      setIsAuthenticated(true)
+    }
+  }, [initialJwt, router])
+
   useEffect(() => {
     const completeRainbowKitLogin = async () => {
       try {
-        if (!address || !isConnected || isAuthenticated || loginApi.isPending) return
+        const storedJwt =
+          initialJwt ??
+          (
+            typeof document !== "undefined"
+              ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+              : null
+          )
+
+        const valid = checkExpiration(storedJwt)
+
+        if (!address || !isConnected || isAuthenticated || loginApi.isPending || valid) return
 
         const signature = await signMessageAsync({
           message: AUTH_MESSAGE,
           account: address,
         })
 
-        await loginApi.mutateAsync({
+        const res = await loginApi.mutateAsync({
           walletAddress: address,
           signature,
           message: AUTH_MESSAGE,
@@ -68,6 +125,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
         setShowLoginModal(false)
 
         toast.success('sign in success')
+        router.replace(ROUTES.home)
       } catch (error) {
         setIsAuthenticated(false)
         disconnect()
@@ -81,11 +139,26 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     }
 
     completeRainbowKitLogin()
-  }, [address, isConnected])
+  }, [address, isConnected, isAuthenticated, loginApi.isPending, signMessageAsync, loginApi, disconnect, router])
 
   useEffect(() => {
     const completePrivyLogin = async () => {
-      if (!authenticated || !privyUser?.wallet?.address || isAuthenticated || loginApi.isPending) return
+      const storedJwt =
+        initialJwt ??
+        (
+          typeof document !== "undefined"
+            ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+            : null
+        )
+
+      const valid = checkExpiration(storedJwt)
+      if (
+        !authenticated ||
+        !privyUser?.wallet?.address ||
+        isAuthenticated ||
+        loginApi.isPending ||
+        valid
+      ) return
 
       try {
         const wallet = privyUser.wallet.address
@@ -93,7 +166,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
           message: AUTH_MESSAGE,
         })
 
-        await loginApi.mutateAsync({
+        const res = await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
           message: AUTH_MESSAGE
@@ -104,6 +177,7 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
         setShowLoginModal(false)
 
         toast.success('sign in success')
+        router.replace(ROUTES.home)
       } catch (error) {
         setIsAuthenticated(false)
         privyLogout()
@@ -117,18 +191,24 @@ export function AuthProvider({ children }: Readonly<{ children: React.ReactNode 
     }
 
     completePrivyLogin()
-  }, [authenticated, loginApi, privySignMessage, privyUser])
+  }, [authenticated, isAuthenticated, loginApi, loginApi.isPending, privySignMessage, privyUser, router, privyLogout])
 
   const logout = useCallback(async () => {
     try {
       await privyLogout()
       disconnect()
+
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        router.replace(ROUTES.signIn)
+      }
+
+      router.replace(ROUTES.signIn)
     } catch (error) {
       console.error("Logout error", error)
     } finally {
       setIsAuthenticated(false)
       setWalletAddress(null)
-      setShowLoginModal(true)
     }
   }, [disconnect, privyLogout])
 

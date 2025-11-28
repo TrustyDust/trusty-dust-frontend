@@ -17,7 +17,6 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 import { NavLink } from "@/components/NavLink"
 import useSocialViewModel from "@/hooks/page/useSocial"
-import { useEffect } from "react"
 
 const composerActions = [
   { label: "Image", icon: ImageIcon },

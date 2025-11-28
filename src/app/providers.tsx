@@ -12,17 +12,13 @@ import { AuthProvider } from "@/contexts/auth-context"
 import { LoginModal } from "@/components/dashboard/LoginModal"
 import { getWagmiConfig } from "@/lib/wagmi"
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  logout: () => void;
-}
-
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
 export function Providers({
   children,
-}: Readonly<{ children: React.ReactNode }>) {
+  initialJwt,
+}: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
 
   return (
@@ -44,7 +40,7 @@ export function Providers({
       >
         <WagmiProvider config={wagmiConfig}>
           <RainbowKitProvider>
-            <AuthProvider>
+            <AuthProvider initialJwt={initialJwt}>
               <TooltipProvider>
                 {children}
                 <Toaster
