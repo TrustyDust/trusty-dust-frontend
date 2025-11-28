@@ -43,6 +43,7 @@ export function Providers({
               <TooltipProvider>
                 {children}
                 <Toaster
+                  key="trustydust-toaster"
                   richColors
                   closeButton
                   position="top-right"
