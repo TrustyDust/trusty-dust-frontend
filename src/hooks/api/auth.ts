@@ -1,9 +1,7 @@
 import { useApiMutation } from "../factory"
 import { API_ROUTES } from "@/constant/api"
+import type { LoginRequest, LoginResponse } from "@/types/api"
 
 export const useLoginApi = () =>
-  useApiMutation<{ jwt: string; data: unknown }, { walletAddress: string; signature: string; message: string }>(
-    "post",
-    API_ROUTES.auth.login,
-  )
+  useApiMutation<LoginResponse, LoginRequest>("post", API_ROUTES.auth.login)
 

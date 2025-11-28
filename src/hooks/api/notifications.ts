@@ -1,15 +1,16 @@
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { get, patch } from "@/lib/http-client"
 import { API_ROUTES } from "@/constant/api"
+import type { NotificationItem, NotificationListResponse } from "@/types/api"
 
 export const useNotificationsApi = () =>
-  useQuery({
+  useQuery<NotificationListResponse>({
     queryKey: ["notifications"],
-    queryFn: () => get(API_ROUTES.notifications.list),
+    queryFn: () => get<NotificationListResponse>(API_ROUTES.notifications.list),
   })
 
 export const useMarkNotificationReadApi = (id: string) =>
-  useMutation({
-    mutationFn: () => patch(API_ROUTES.notifications.markAsRead(id)),
+  useMutation<NotificationItem>({
+    mutationFn: () => patch<NotificationItem>(API_ROUTES.notifications.markAsRead(id)),
   })
 
