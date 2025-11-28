@@ -6,13 +6,12 @@ import {
   useSendMessageApi,
 } from "./api/chat"
 
-export const useChatViewModel = (conversationId?: string) => {
+export const useChatViewModel = () => {
   const conversations = useConversationsApi()
   const createConversation = useCreateConversationApi()
-  const messages = useMessagesApi(conversationId ?? "")
   const sendMessage = useSendMessageApi()
 
-  return { conversations, createConversation, messages, sendMessage }
+  return { conversations, createConversation, sendMessage }
 }
 
 export const useConversations = useConversationsApi
