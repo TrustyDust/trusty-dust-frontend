@@ -32,8 +32,13 @@ export async function middleware(request: NextRequest) {
         }
     }
 
-    if (jwt && isPublicPage) return redirect(home);
-    if (!jwt && !isPublicPage) return redirect(signIn);
+    if (jwt && isPublicPage) {
+        return redirect(home);
+    }
+
+    if (!jwt && !isPublicPage) {
+        return redirect(signIn);
+    }
 
     return NextResponse.next();
 }
