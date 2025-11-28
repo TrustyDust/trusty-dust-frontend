@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import {
   Briefcase,
@@ -16,8 +16,8 @@ import {
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 import { NavLink } from "@/components/NavLink"
-
-const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
+import useSocialViewModel from "@/hooks/page/useSocial"
+import { useEffect } from "react"
 
 const composerActions = [
   { label: "Image", icon: ImageIcon },
@@ -34,11 +34,7 @@ const feedPosts = [
     timestamp: "2m ago",
     content:
       "Experimenting with multi-chain credential sharing. TrustyDust makes it effortless to surface provable wins while keeping wallets private.",
-    attachments: [
-      optimize("https://images.unsplash.com/photo-1461749280684-dccba630e2f6"),
-      optimize("https://images.unsplash.com/photo-1545239351-1141bd82e8a6"),
-      optimize("https://images.unsplash.com/photo-1500530855697-b586d89ba3ee"),
-    ],
+    attachments: ["", "", ""],
     likes: 212,
     comments: 54,
     accent: "from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0]",
@@ -51,12 +47,7 @@ const feedPosts = [
     timestamp: "14m ago",
     content:
       "We just shipped a trust-mining bounty. Looking for zk developers who love human-centric UX. Drop your latest build or DM me for briefs.",
-    attachments: [
-      optimize("https://images.unsplash.com/photo-1483478550801-ceba5fe50e8e"),
-      optimize("https://images.unsplash.com/photo-1451187580459-43490279c0fa"),
-      optimize("https://images.unsplash.com/photo-1469474968028-56623f02e42e"),
-      optimize("https://images.unsplash.com/photo-1461749280684-dccba630e2f6"),
-    ],
+    attachments: ["", "", "", ""],
     likes: 178,
     comments: 39,
     accent: "from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF]",
@@ -84,17 +75,7 @@ const suggestedPeople = [
   },
 ]
 
-const scrollerAvatars = [
-  "NA",
-  "LR",
-  "AK",
-  "MS",
-  "RV",
-  "JP",
-  "SZ",
-  "KT",
-  "OL",
-]
+const scrollerAvatars = ["NA", "LR", "AK", "MS", "RV", "JP", "SZ", "KT", "OL"]
 
 const applications = [
   {
@@ -112,6 +93,8 @@ const applications = [
 ]
 
 export default function Dashboard() {
+  const { feed } = useSocialViewModel()
+
   return (
     <div className="relative min-h-screen px-4 py-6 text-white sm:px-6 lg:px-8">
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10">
@@ -161,7 +144,10 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
-                  <NavLink href={"/post"} className="rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
+                  <NavLink
+                    href={"/post"}
+                    className="rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]"
+                  >
                     Post
                   </NavLink>
                 </div>
@@ -243,7 +229,10 @@ export default function Dashboard() {
                     </p>
                     <h3 className="text-xl font-semibold">People</h3>
                   </div>
-                  <NavLink href={"/chat"} className="text-xs font-semibold text-[#7BDFFF] hover:text-[#7BDFFF]/80 transition-colors">
+                  <NavLink
+                    href={"/chat"}
+                    className="text-xs font-semibold text-[#7BDFFF] hover:text-[#7BDFFF]/80 transition-colors"
+                  >
                     See all
                   </NavLink>
                 </div>
@@ -301,9 +290,7 @@ export default function Dashboard() {
                     <p className="text-xs uppercase tracking-[0.3em] text-gray-400">
                       My Jobs
                     </p>
-                    <h3 className="text-xl font-semibold">
-                      Application Panel
-                    </h3>
+                    <h3 className="text-xl font-semibold">Application Panel</h3>
                   </div>
                   <Briefcase className="h-5 w-5 text-[#7BDFFF]" />
                 </div>
@@ -323,10 +310,11 @@ export default function Dashboard() {
                           </p>
                         </div>
                         <div
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${application.status === "Accepted"
-                            ? "bg-[#1C4238] text-[#63F1C2]"
-                            : "bg-white/10 text-gray-300"
-                            }`}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
+                            application.status === "Accepted"
+                              ? "bg-[#1C4238] text-[#63F1C2]"
+                              : "bg-white/10 text-gray-300"
+                          }`}
                         >
                           {application.status}
                         </div>

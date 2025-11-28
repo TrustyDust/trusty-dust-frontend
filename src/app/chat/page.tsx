@@ -13,6 +13,7 @@ import {
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import Image from "next/image"
 
 const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
 
@@ -286,9 +287,12 @@ export default function ChatPage() {
                                                             key={idx}
                                                             className="group relative aspect-square overflow-hidden rounded-lg border border-white/10"
                                                         >
-                                                            <img
+                                                            <Image
                                                                 src={img}
+                                                                alt="Message Image"
                                                                 className="h-full w-full object-cover transition group-hover:scale-110"
+                                                                width={100}
+                                                                height={100}
                                                             />
                                                         </div>
                                                     ))}
