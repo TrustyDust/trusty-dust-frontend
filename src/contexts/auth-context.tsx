@@ -10,7 +10,7 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -172,7 +172,7 @@ export function AuthProvider({
           account: address,
         })
 
-        await loginApi.mutateAsync({
+        const res = await loginApi.mutateAsync({
           walletAddress: address,
           signature,
           message: AUTH_MESSAGE,
@@ -266,7 +266,7 @@ export function AuthProvider({
           message: AUTH_MESSAGE,
         })
 
-        await loginApi.mutateAsync({
+        const res = await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
           message: AUTH_MESSAGE,
