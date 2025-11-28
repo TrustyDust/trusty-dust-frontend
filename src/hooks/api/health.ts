@@ -1,4 +1,4 @@
-import { useApiQuery } from "../page/factory"
+import { useApiQuery } from "../service/factory"
 import { API_ROUTES } from "@/constant/api"
 import type { HealthStatusResponse, SupabaseHealthResponse } from "@/types/api"
 

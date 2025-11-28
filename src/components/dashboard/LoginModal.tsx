@@ -22,11 +22,11 @@ export function LoginModal() {
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-100 flex items-center justify-center bg-black/70 backdrop-blur-sm"
       onClick={closeLoginModal}
     >
       <div
-        className="relative w-full max-w-md rounded-[32px] border border-white/15 bg-[#030b1e]/95 p-8 text-center shadow-[0_30px_80px_rgba(3,6,18,0.9)]"
+        className="relative w-full max-w-md rounded-4xl border border-white/15 bg-[#030b1e]/95 p-8 text-center shadow-[0_30px_80px_rgba(3,6,18,0.9)]"
         onClick={(e) => e.stopPropagation()}
       >
         <button
@@ -52,7 +52,7 @@ export function LoginModal() {
           <button
             onClick={connectWithPrivy}
             disabled={!!connecting}
-            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-[#131b2f] to-[#0e1423] px-5 py-4 text-left text-sm font-semibold text-white transition hover:border-[#3BA3FF]"
+            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-linear-to-r from-[#131b2f] to-[#0e1423] px-5 py-4 text-left text-sm font-semibold text-white transition hover:border-[#3BA3FF]"
           >
             <span>Login with Google Privy</span>
             <span className="text-xs text-gray-400">
@@ -62,7 +62,7 @@ export function LoginModal() {
           <button
             onClick={connectWithRainbow}
             disabled={!!connecting}
-            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-gradient-to-r from-[#1c2a48] to-[#16213b] px-5 py-4 text-left text-sm font-semibold text-white transition hover:border-[#6B4DFF]"
+            className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-linear-to-r from-[#1c2a48] to-[#16213b] px-5 py-4 text-left text-sm font-semibold text-white transition hover:border-[#6B4DFF]"
           >
             <span>Login with Rainbow Kit</span>
             <span className="text-xs text-gray-400">

@@ -3,6 +3,8 @@
  * All date fields are ISO 8601 strings in transport.
  */
 
+import { Address } from "viem"
+
 // =====================================================
 // Enums
 // =====================================================
@@ -16,7 +18,7 @@ export type ApplicationStatus = "APPLIED" | "SUBMITTED" | "CONFIRMED"
 // =====================================================
 
 export interface LoginRequest {
-  walletAddress: string
+  walletAddress: Address
   signature: string
   message: string
 }

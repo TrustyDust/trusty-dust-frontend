@@ -118,11 +118,11 @@ export default function Dashboard() {
         <DashboardHeader
           actions={
             <>
-              <button className="hidden items-center gap-2 rounded-2xl border border-[#3BA3FF]/40 bg-gradient-to-r from-[#3587FF] to-[#5E4BFF] px-5 py-2 text-sm font-semibold tracking-wide text-white shadow-[0_10px_40px_rgba(51,129,255,0.35)] transition hover:scale-[1.01] hover:shadow-[0_10px_45px_rgba(83,75,255,0.45)] sm:flex">
+              <button className="hidden items-center gap-2 rounded-2xl border border-[#3BA3FF]/40 bg-linear-to-r from-[#3587FF] to-[#5E4BFF] px-5 py-2 text-sm font-semibold tracking-wide text-white shadow-[0_10px_40px_rgba(51,129,255,0.35)] transition hover:scale-[1.01] hover:shadow-[0_10px_45px_rgba(83,75,255,0.45)] sm:flex">
                 <CloudUpload className="h-4 w-4" />
                 Post
               </button>
-              <div className="hidden rounded-full border border-white/10 bg-gradient-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
+              <div className="hidden rounded-full border border-white/10 bg-linear-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
                 $100 DUST
               </div>
             </>
@@ -138,7 +138,7 @@ export default function Dashboard() {
             <div className="space-y-6">
               <section className="rounded-[28px] border border-white/10 bg-[#040f25]/70 p-6 backdrop-blur">
                 <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
                     TR
                   </div>
                   <div>
@@ -161,7 +161,7 @@ export default function Dashboard() {
                       </button>
                     ))}
                   </div>
-                  <NavLink href={"/post"} className="rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
+                  <NavLink href={"/post"} className="rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold text-white shadow-[0_10px_35px_rgba(59,163,255,0.35)] hover:scale-[1.01]">
                     Post
                   </NavLink>
                 </div>
@@ -176,12 +176,12 @@ export default function Dashboard() {
               {feedPosts.map((post) => (
                 <article
                   key={post.id}
-                  className="rounded-[32px] border border-[#132852] bg-[#030c1d]/85 p-6 shadow-[0_20px_55px_rgba(2,8,27,0.85)] backdrop-blur"
+                  className="rounded-4xl border border-[#132852] bg-[#030c1d]/85 p-6 shadow-[0_20px_55px_rgba(2,8,27,0.85)] backdrop-blur"
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-4">
                       <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br ${post.accent} text-lg font-semibold`}
+                        className={`flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br ${post.accent} text-lg font-semibold`}
                       >
                         {post.name
                           .split(" ")
@@ -252,7 +252,7 @@ export default function Dashboard() {
                   {scrollerAvatars.map((initials) => (
                     <div
                       key={initials}
-                      className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold"
+                      className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-xs font-semibold"
                     >
                       {initials}
                     </div>
@@ -267,7 +267,7 @@ export default function Dashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className={`flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br ${person.accent} text-sm font-semibold`}
+                          className={`flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br ${person.accent} text-sm font-semibold`}
                         >
                           {person.name
                             .split(" ")
@@ -323,11 +323,10 @@ export default function Dashboard() {
                           </p>
                         </div>
                         <div
-                          className={`rounded-full px-3 py-1 text-xs font-semibold ${
-                            application.status === "Accepted"
-                              ? "bg-[#1C4238] text-[#63F1C2]"
-                              : "bg-white/10 text-gray-300"
-                          }`}
+                          className={`rounded-full px-3 py-1 text-xs font-semibold ${application.status === "Accepted"
+                            ? "bg-[#1C4238] text-[#63F1C2]"
+                            : "bg-white/10 text-gray-300"
+                            }`}
                         >
                           {application.status}
                         </div>

@@ -1,124 +1,182 @@
-'use client'
+"use client"
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react"
-import { toast } from "sonner"
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useAccount } from "wagmi"
+import { useConnection, useDisconnect, useSignMessage } from "wagmi"
+
+import { useLoginApi } from "@/hooks/api/auth"
+import { AUTH_MESSAGE } from "@/constant/auth"
 import { useConnectModal } from "@rainbow-me/rainbowkit"
+import { Address } from "viem"
+import { toast } from "sonner"
 
-type LoginMethod = "privy" | "rainbow" | null
-
-type AuthContextValue = {
-  isAuthenticated: boolean
-  walletAddress: string | null
-  connecting: LoginMethod
-  showLoginModal: boolean
-  connectWithPrivy: () => Promise<void>
-  connectWithRainbow: () => Promise<void>
-  toggleLoginModal: () => void
-  closeLoginModal: () => void
-  logout: () => void
-}
-
-const AuthContext = createContext<AuthContextValue | null>(null)
+const AuthContext = createContext<AuthContextType | null>(null)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
-  const [connecting, setConnecting] = useState<LoginMethod>(null)
+  const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
-  const { ready, authenticated, user, login, logout: privyLogout } = usePrivy()
-  const { openConnectModal } = useConnectModal()
-  const { address: wagmiAddress, isConnected: wagmiConnected } = useAccount()
+
+  const loginApi = useLoginApi()
+
+  const { openConnectModal: connectWithRainbow } = useConnectModal();
+  const { address, isConnected } = useConnection()
+  const { disconnect } = useDisconnect()
+  const { signMessageAsync } = useSignMessage()
+
+  const {
+    login: connectWithPrivyOrigin,
+    user: privyUser,
+    authenticated,
+    signMessage: privySignMessage,
+    logout: privyLogout
+  } = usePrivy()
+
+  const openLoginModal = useCallback(() => setShowLoginModal(true), [])
+  const closeLoginModal = useCallback(() => setShowLoginModal(false), [])
+  const connectWithPrivy = () => {
+    connectWithPrivyOrigin()
+  }
 
   useEffect(() => {
-    if (!ready) return
-    setIsAuthenticated(authenticated)
-    setWalletAddress(user?.wallet?.address ?? null)
-    if (authenticated) {
-      setShowLoginModal(false)
+    const completeRainbowKitLogin = async () => {
+      try {
+        if (!address || !isConnected || isAuthenticated || loginApi.isPending) return
+
+        const signature = await signMessageAsync({
+          message: AUTH_MESSAGE,
+          account: address,
+        })
+
+        await loginApi.mutateAsync({
+          walletAddress: address,
+          signature,
+          message: AUTH_MESSAGE,
+        })
+
+        setIsAuthenticated(true)
+        setWalletAddress(address)
+        setShowLoginModal(false)
+
+        toast.success('sign in success')
+      } catch (error) {
+        setIsAuthenticated(false)
+        disconnect()
+
+        const message = `Rainbow login failed : ${error}`
+        console.error(message)
+        toast.error(message)
+      } finally {
+        setConnecting(null)
+      }
     }
-  }, [authenticated, ready, user])
+
+    completeRainbowKitLogin()
+  }, [address, isConnected])
 
   useEffect(() => {
-    if (wagmiConnected && wagmiAddress) {
-      setWalletAddress(wagmiAddress)
-      setIsAuthenticated(true)
-      setShowLoginModal(false)
-    } else if (!wagmiConnected && !authenticated) {
-      setWalletAddress(null)
-      setIsAuthenticated(false)
-    }
-  }, [authenticated, wagmiAddress, wagmiConnected])
+    const completePrivyLogin = async () => {
+      if (!authenticated || !privyUser?.wallet?.address || isAuthenticated || loginApi.isPending) return
 
-  const connectWithPrivy = useCallback(async () => {
-    try {
-      setConnecting("privy")
-      if (!ready) {
-        toast.error("Privy not ready")
-        return
-      }
-      await login()
-      toast.success("Authenticated with Privy")
-      setShowLoginModal(false)
-    } catch (error) {
-      console.error(error)
-      toast.error("Failed to login with Privy")
-    } finally {
-      setConnecting(null)
-    }
-  }, [login, ready])
+      try {
+        const wallet = privyUser.wallet.address
+        const sign = await privySignMessage({
+          message: AUTH_MESSAGE,
+        })
 
-  const connectWithRainbow = useCallback(async () => {
-    try {
-      setConnecting("rainbow")
-      if (!openConnectModal) {
-        toast.error("RainbowKit unavailable")
-        return
+        await loginApi.mutateAsync({
+          walletAddress: wallet as Address,
+          signature: sign.signature,
+          message: AUTH_MESSAGE
+        })
+
+        setIsAuthenticated(true)
+        setWalletAddress(wallet)
+        setShowLoginModal(false)
+
+        toast.success('sign in success')
+      } catch (error) {
+        setIsAuthenticated(false)
+        privyLogout()
+
+        const message = `Privy login failed : ${error}`
+        console.error(message)
+        toast.error(message)
+      } finally {
+        setConnecting(null)
       }
-      openConnectModal()
-    } catch (error) {
-      console.error(error)
-      toast.error("Failed to connect wallet")
-    } finally {
-      setConnecting(null)
     }
-  }, [openConnectModal])
+
+    completePrivyLogin()
+  }, [authenticated, loginApi, privySignMessage, privyUser])
 
   const logout = useCallback(async () => {
     try {
       await privyLogout()
+      disconnect()
     } catch (error) {
-      console.error(error)
+      console.error("Logout error", error)
     } finally {
       setIsAuthenticated(false)
       setWalletAddress(null)
-      toast("Disconnected from TrustyDust")
+      setShowLoginModal(true)
     }
-  }, [privyLogout])
+  }, [disconnect, privyLogout])
 
-  const value = useMemo<AuthContextValue>(
+  const value = useMemo<AuthContextType>(
     () => ({
       isAuthenticated,
       walletAddress,
       connecting,
       showLoginModal,
-      connectWithPrivy,
+      openLoginModal,
+      closeLoginModal,
       connectWithRainbow,
-      toggleLoginModal: () => setShowLoginModal((prev) => !prev),
-      closeLoginModal: () => setShowLoginModal(false),
+      connectWithPrivy,
       logout,
     }),
-    [connecting, connectWithPrivy, connectWithRainbow, isAuthenticated, logout, showLoginModal, walletAddress],
+    [
+      closeLoginModal,
+      connectWithPrivy,
+      connectWithRainbow,
+      connecting,
+      isAuthenticated,
+      logout,
+      openLoginModal,
+      showLoginModal,
+      walletAddress,
+    ],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {
-  const context = useContext(AuthContext)
-  if (!context) {
+  const ctx = useContext(AuthContext)
+  if (!ctx) {
     throw new Error("useAuth must be used within AuthProvider")
   }
-  return context
+  return ctx
+}
+
+export type AuthContextType = {
+  isAuthenticated: boolean
+  walletAddress: string | null
+  connecting: "rainbow" | "privy" | null
+  showLoginModal: boolean
+
+  openLoginModal: () => void
+  closeLoginModal: () => void
+  connectWithRainbow?: (() => void) | undefined
+  connectWithPrivy: () => void
+  logout: () => void
 }

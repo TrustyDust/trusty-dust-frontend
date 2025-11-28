@@ -55,7 +55,7 @@ export function DashboardHeader({
   selectedFilter,
   onFilterChange,
 }: DashboardHeaderProps) {
-  const { isAuthenticated, logout, toggleLoginModal } = useAuth()
+  const { isAuthenticated, logout, openLoginModal } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
@@ -132,7 +132,7 @@ export function DashboardHeader({
                       className={cn(
                         "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-left text-gray-200 transition",
                         option.value === selectedFilter
-                          ? "bg-gradient-to-r from-[#2E7FFF]/30 to-[#6B4DFF]/30 text-white"
+                          ? "bg-linear-to-r from-[#2E7FFF]/30 to-[#6B4DFF]/30 text-white"
                           : "hover:bg-white/5",
                       )}
                     >
@@ -163,16 +163,16 @@ export function DashboardHeader({
                 className="flex items-center gap-2 rounded-full border border-white/10 bg-[#050f22] pl-2 pr-3 text-sm transition hover:bg-white/10"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
                   TR
                 </div>
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
               {isMenuOpen && (
-                <div className="absolute right-0 top-14 w-60 rounded-[24px] border border-white/10 bg-[#020714]/95 p-4 shadow-[0_25px_60px_rgba(1,4,16,0.8)]">
-                  <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-gradient-to-r from-[#071935] to-[#050d21] px-3 py-3">
+                <div className="absolute right-0 top-14 w-60 rounded-3xl border border-white/10 bg-[#020714]/95 p-4 shadow-[0_25px_60px_rgba(1,4,16,0.8)]">
+                  <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-linear-to-r from-[#071935] to-[#050d21] px-3 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-sm font-semibold">
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-sm font-semibold">
                         TR
                       </div>
                       <div className="text-left">
@@ -180,7 +180,7 @@ export function DashboardHeader({
                         <p className="text-xs text-gray-400">UI UX Designer</p>
                       </div>
                     </div>
-                    <div className="h-10 w-10 rounded-full border border-white/10 bg-gradient-to-br from-[#42E8E0] to-[#6B4DFF]" />
+                    <div className="h-10 w-10 rounded-full border border-white/10 bg-linear-to-br from-[#42E8E0] to-[#6B4DFF]" />
                   </div>
                   <div className="mt-3 space-y-2">
                     {menuItems.map((item) => {
@@ -236,8 +236,8 @@ export function DashboardHeader({
           </div>
         ) : (
           <button
-            className="rounded-full border border-white/10 bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]"
-            onClick={toggleLoginModal}
+            className="rounded-full border border-white/10 bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]"
+            onClick={openLoginModal}
           >
             Login
           </button>

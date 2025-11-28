@@ -2,7 +2,6 @@ import type { Metadata } from "next"
 import "../css/globals.css"
 import "@rainbow-me/rainbowkit/styles.css"
 import { CosmicBackground } from "@/components/CosmicBackground"
-import { ProvidersWrapper } from "./providers-wrapper"
 import { Providers } from "./providers"
 
 export const metadata: Metadata = {

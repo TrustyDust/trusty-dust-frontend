@@ -1,3 +1,4 @@
+import { API_PREFIX, PROXY_BASE_URL } from '@/constant/api';
 import { cookies } from 'next/headers';
 
 async function proxyRequest(
@@ -10,12 +11,13 @@ async function proxyRequest(
   const cookieStore = await cookies();
   const token = cookieStore.get('jwt')?.value || '';
 
-  const targetPath = Array.isArray(path) ? path.join('/') : path;
+  let targetPath = Array.isArray(path) ? path.join('/') : path;
+  targetPath = targetPath.split('api/proxy')[1]
 
   const url = new URL(request.url);
   const queryString = url.search || '';
 
-  const targetUrl = `${API_ENDPOINT}/api/${targetPath}${queryString}`;
+  const targetUrl = `${API_ENDPOINT}${API_PREFIX}${targetPath}${queryString}`;
 
   const requestHeaders: Record<string, string> = {};
   request.headers.forEach((value, key) => {
@@ -50,7 +52,7 @@ async function proxyRequest(
     responseHeaders.set(key, value);
   });
 
-  if (targetPath === 'auth/login' && fetchResponse.ok) {
+  if (targetPath === '/auth/login' && fetchResponse.ok) {
     const responseData = await fetchResponse.json();
 
     if (responseData.data.jwt) {

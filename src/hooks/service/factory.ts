@@ -1,4 +1,3 @@
-// src/hooks/factory.ts
 import {
   useQuery,
   useMutation,
