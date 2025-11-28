@@ -9,7 +9,7 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -18,7 +18,6 @@ import { Address } from "viem"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { ROUTES } from "@/constant/route"
-import { useLoading } from "./loading-context"
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
@@ -46,14 +45,13 @@ export function AuthProvider({
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const router = useRouter()
   const loginApi = useLoginApi()
-  const { hide: hideLoad, show: showLoad } = useLoading()
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
 
-  const { openConnectModal } = useConnectModal();
+  const { openConnectModal: connectWithRainbow } = useConnectModal();
   const { address, isConnected } = useConnection()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
@@ -69,6 +67,29 @@ export function AuthProvider({
   const openLoginModal = useCallback(() => setShowLoginModal(true), [])
   const closeLoginModal = useCallback(() => setShowLoginModal(false), [])
 
+  useEffect(() => {
+    const storedJwt =
+      initialJwt ??
+      (
+        typeof document !== "undefined"
+          ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
+          : null
+      )
+
+    const valid = checkExpiration(storedJwt)
+    if (!valid && storedJwt) {
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        router.replace(ROUTES.signIn)
+      }
+      return
+    }
+    if (valid) {
+      setIsAuthenticated(true)
+    }
+  }, [initialJwt, router])
+
+  // Initial JWT check from cookies (server -> client)
   useEffect(() => {
     const storedJwt =
       initialJwt ??
@@ -133,9 +154,8 @@ export function AuthProvider({
           account: address as Address,
         })
 
-        showLoad()
-        await loginApi.mutateAsync({
-          walletAddress: address as Address,
+        const res = await loginApi.mutateAsync({
+          walletAddress: address,
           signature,
           message: AUTH_MESSAGE,
         })
@@ -160,11 +180,7 @@ export function AuthProvider({
     }
 
     completeRainbowKitLogin()
-  }, [
-    initialJwt,
-    address,
-    isConnected
-  ])
+  }, [address, isConnected, isAuthenticated, loginApi.isPending, signMessageAsync, loginApi, disconnect, router])
 
   useEffect(() => {
     const completePrivyLogin = async () => {
@@ -191,8 +207,7 @@ export function AuthProvider({
           message: AUTH_MESSAGE,
         })
 
-        showLoad()
-        await loginApi.mutateAsync({
+        const res = await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
           message: AUTH_MESSAGE
@@ -218,7 +233,7 @@ export function AuthProvider({
     }
 
     completePrivyLogin()
-  }, [authenticated, privyUser])
+  }, [authenticated, isAuthenticated, loginApi, loginApi.isPending, privySignMessage, privyUser, router, privyLogout])
 
   const logout = useCallback(async () => {
     try {
