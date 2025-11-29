@@ -51,30 +51,32 @@ export default function SignInPage() {
               <div className="space-y-3">
                 <button
                   onClick={connectWithPrivy}
-                  disabled={isConnecting}
+                  // disabled={isConnecting}
                   className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#3BA3FF]/50 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
                   <div className="flex items-center gap-2">
-                    {connecting === "privy" && (
+                    {/* {connecting === "privy" && (
                       <Loader2 className="h-4 w-4 animate-spin text-[#3BA3FF]" />
                     )}
-                    <span>Login with Privy</span>
+                    <span>Login with Privy</span> */}
+                    Login with Privy
                   </div>
                   <span className="text-xs text-white/80">
-                    {connecting === "privy"
+                  Google / Wallet
+                    {/* {connecting === "privy"
                       ? "Connecting..."
-                      : "Google / Wallet"}
+                      : "Google / Wallet"} */}
                   </span>
                 </button>
                 <button
                   onClick={connectWithRainbow}
-                  disabled={isConnecting}
+                  // disabled={isConnecting}
                   className={`flex w-full items-center justify-between rounded-2xl border border-white/10 ${glow} px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(94,123,255,0.45)] transition hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100`}
                 >
                   <div className="flex items-center gap-2">
-                    {connecting === "rainbow" && (
+                    {/* {connecting === "rainbow" && (
                       <Loader2 className="h-4 w-4 animate-spin text-white" />
-                    )}
+                    )} */}
                     <span>Connect Wallet (Rainbow)</span>
                   </div>
                   {connecting !== "rainbow" && <Wallet className="h-4 w-4" />}

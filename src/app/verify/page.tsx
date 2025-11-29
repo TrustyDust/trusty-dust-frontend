@@ -1,19 +1,15 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, Smile, Users } from "lucide-react"
+import { ChevronDown, Smile, Users, Loader2, AlertCircle } from "lucide-react"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { useAnalyzeWalletApi } from "@/hooks/api/walletReputation"
+import { useCurrentUser, useCurrentUserId } from "@/hooks/page/useCurrentUser"
+import { toast } from "sonner"
 import Image from "next/image"
-
-const trustMetrics = [
-  { label: "Transaction history", value: 90 },
-  { label: "Token Holdings", value: 90 },
-  { label: "NFT Engagement", value: 90 },
-  { label: "Contract Interaction", value: 90 },
-  { label: "DeFi Activity", value: 90 },
-]
+import type { WalletReputationResponse } from "@/types/api"
 
 const trustLevels = [
   { label: "Dust", points: 2000 },
@@ -53,9 +49,58 @@ const hotJobs = [
   { title: "Smart Contract Dev", company: "Bybit APAC", location: "Remote" },
 ]
 
+// Default chain ID untuk Ethereum mainnet
+const DEFAULT_CHAIN_ID = 4202
+
+// Helper function untuk mendapatkan tier image path
+function getTierImagePath(tier: string): string {
+  const tierLower = tier.toLowerCase()
+  if (tierLower === "dust") return "/tier/dust.svg"
+  if (tierLower === "spark") return "/tier/spark.svg"
+  if (tierLower === "flare") return "/tier/flare.svg"
+  if (tierLower === "nova") return "/tier/nova.svg"
+  return "/tier/spark.svg" // default
+}
+
 export default function VerifyPage() {
   const [mode, setMode] = useState<"jobs" | "people">("jobs")
   const [selectorOpen, setSelectorOpen] = useState(false)
+  const [walletAddress, setWalletAddress] = useState("")
+  const [analyzeResult, setAnalyzeResult] = useState<WalletReputationResponse | null>(null)
+  
+  const { user } = useCurrentUser()
+  const userId = useCurrentUserId()
+  const analyzeWallet = useAnalyzeWalletApi()
+
+  const handleAnalyze = async () => {
+    if (!walletAddress.trim()) {
+      toast.error("Please enter a wallet address")
+      return
+    }
+
+    // Basic validation untuk Ethereum address format
+    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress.trim())) {
+      toast.error("Invalid wallet address format")
+      return
+    }
+
+    try {
+      const result = await analyzeWallet.mutateAsync({
+        address: walletAddress.trim(),
+        chainId: DEFAULT_CHAIN_ID,
+        userId: userId || undefined,
+      })
+      
+      setAnalyzeResult(result)
+      toast.success("Wallet analyzed successfully!")
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Failed to analyze wallet"
+      toast.error(errorMessage)
+      setAnalyzeResult(null)
+    }
+  }
+
+  const isLoading = analyzeWallet.isPending
 
   return (
     <div className="relative min-h-screen px-4 py-6 pb-10 text-white sm:px-6 lg:px-8">
@@ -139,77 +184,181 @@ export default function VerifyPage() {
                   </p>
                   <div className="mt-4 flex flex-col gap-3 sm:flex-row">
                     <input
-                      className="flex-1 rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none"
-                      placeholder="Enter Wallet Address"
+                      value={walletAddress}
+                      onChange={(e) => setWalletAddress(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && !isLoading) {
+                          handleAnalyze()
+                        }
+                      }}
+                      disabled={isLoading}
+                      className="flex-1 rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                      placeholder="Enter Wallet Address (0x...)"
                     />
-                    <button className="rounded-2xl bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-3 text-sm font-semibold shadow-[0_10px_30px_rgba(46,127,255,0.45)]">
-                      Analyze
+                    <button
+                      onClick={handleAnalyze}
+                      disabled={isLoading || !walletAddress.trim()}
+                      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-3 text-sm font-semibold shadow-[0_10px_30px_rgba(46,127,255,0.45)] transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_10px_30px_rgba(46,127,255,0.45)]"
+                    >
+                      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                      {isLoading ? "Analyzing..." : "Analyze"}
                     </button>
                   </div>
+                  
+                  {/* Error State */}
+                  {analyzeWallet.error && (
+                    <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                        <div className="flex-1">
+                          <p className="text-sm font-semibold text-red-300">Analysis failed</p>
+                          <p className="text-xs text-red-400/80 mt-1">
+                            {analyzeWallet.error instanceof Error
+                              ? analyzeWallet.error.message
+                              : "Something went wrong. Please try again."}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </section>
 
-                <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-6 backdrop-blur">
-                  <div className="flex flex-col gap-6 lg:flex-row">
-                    <div className="flex flex-1 flex-col gap-4 rounded-[24px p-6">
-                      <div className="flex items-center gap-4">
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white ">
-                          <Image
-                            src="/tier/spark.svg"
-                            alt="Spark Tier"
-                            width={176}
-                            height={176}
-                            className="h-44 w-44"
+                {/* Result Section - Only show after analyze */}
+                {analyzeResult && (
+                  <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-6 backdrop-blur">
+                    <div className="flex flex-col gap-6 lg:flex-row">
+                      <div className="flex flex-1 flex-col gap-4 rounded-[24px] p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="flex h-20 w-20 items-center justify-center rounded-full text-2xl font-bold text-white">
+                            <Image
+                              src={getTierImagePath(analyzeResult.tier)}
+                              alt={`${analyzeResult.tier} Tier`}
+                              width={176}
+                              height={176}
+                              className="h-44 w-44"
+                            />
+                          </div>
+                          <div>
+                            <p className="text-sm uppercase tracking-[0.2em] text-blue-200">
+                              {analyzeResult.tier} Tier
+                            </p>
+                            <p className="text-4xl font-semibold">{analyzeResult.score} Pts</p>
+                            <p className="text-xs text-gray-400">
+                              Risk Score {analyzeResult.riskScore}/100
+                            </p>
+                          </div>
+                        </div>
+                        {analyzeResult.reasoning && (
+                          <div className="mt-4 rounded-2xl border border-white/10 bg-[#050f22]/60 p-4">
+                            <p className="text-xs text-gray-400">{analyzeResult.reasoning}</p>
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-1 flex-col justify-center rounded-[24px] border border-white/5 bg-[#050f22]/60 p-6">
+                        <p className="text-sm uppercase tracking-[0.2em] text-gray-400">
+                          Score Breakdown
+                        </p>
+                        <div className="mt-3 h-2 rounded-full bg-white/10">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
+                            style={{ width: `${(analyzeResult.score / 1000) * 100}%` }}
                           />
                         </div>
-                        <div>
-                          <p className="text-sm uppercase tracking-[0.2em] text-blue-200">
-                            Spark Tier
-                          </p>
-                          <p className="text-4xl font-semibold">4000 Pts</p>
-                          <p className="text-xs text-gray-400">
-                            Trust Level High • Risk Score 12/100
-                          </p>
+                        <div className="mt-4 flex items-center justify-between text-sm text-gray-300">
+                          <span>Tier: {analyzeResult.tier}</span>
+                          <span>Score: {analyzeResult.score}/1000</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-1 flex-col justify-center rounded-[24px] border border-white/5 bg-[#050f22]/60 p-6">
-                      <p className="text-sm uppercase tracking-[0.2em] text-gray-400">
-                        Confidence
-                      </p>
-                      <div className="mt-3 h-2 rounded-full bg-white/10">
-                        <div className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]" />
-                      </div>
-                      <div className="mt-4 flex items-center justify-between text-sm text-gray-300">
-                        <span>Trust Level High</span>
-                        <span>Score 4000</span>
-                      </div>
-                    </div>
-                  </div>
 
-                  <div className="mt-6 grid gap-4 md:grid-cols-2">
-                    {trustMetrics.map((metric, index) => (
-                      <div
-                        key={metric.label}
-                        className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4"
-                      >
+                    <div className="mt-6 grid gap-4 md:grid-cols-2">
+                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
                         <div className="flex items-center justify-between text-sm text-gray-300">
-                          <span>{metric.label}</span>
-                          <span>{metric.value}%</span>
+                          <span>Transaction History</span>
+                          <span>{analyzeResult.breakdown.txnScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className={`h-full rounded-full ${
-                              index % 2 === 0
-                                ? "bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
-                                : "bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF]"
-                            }`}
-                            style={{ width: `${metric.value}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
+                            style={{ width: `${(analyzeResult.breakdown.txnScore / 1000) * 100}%` }}
                           />
                         </div>
                       </div>
-                    ))}
-                  </div>
-                </section>
+                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          <span>Token Holdings</span>
+                          <span>{analyzeResult.breakdown.tokenScore}</span>
+                        </div>
+                        <div className="mt-2 h-2 rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF]"
+                            style={{ width: `${(analyzeResult.breakdown.tokenScore / 1000) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          <span>NFT Engagement</span>
+                          <span>{analyzeResult.breakdown.nftScore}</span>
+                        </div>
+                        <div className="mt-2 h-2 rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
+                            style={{ width: `${(analyzeResult.breakdown.nftScore / 1000) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          <span>DeFi Activity</span>
+                          <span>{analyzeResult.breakdown.defiScore}</span>
+                        </div>
+                        <div className="mt-2 h-2 rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF]"
+                            style={{ width: `${(analyzeResult.breakdown.defiScore / 1000) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 md:col-span-2">
+                        <div className="flex items-center justify-between text-sm text-gray-300">
+                          <span>Contract Interaction</span>
+                          <span>{analyzeResult.breakdown.contractScore}</span>
+                        </div>
+                        <div className="mt-2 h-2 rounded-full bg-white/5">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
+                            style={{ width: `${(analyzeResult.breakdown.contractScore / 1000) * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </section>
+                )}
+
+                {/* Loading State */}
+                {isLoading && (
+                  <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-12 backdrop-blur">
+                    <div className="flex flex-col items-center justify-center gap-4">
+                      <Loader2 className="h-8 w-8 animate-spin text-[#3BA3FF]" />
+                      <p className="text-sm text-gray-400">Analyzing wallet reputation...</p>
+                    </div>
+                  </section>
+                )}
+
+                {/* Empty State - Before analyze */}
+                {!analyzeResult && !isLoading && (
+                  <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-12 backdrop-blur">
+                    <div className="text-center">
+                      <p className="text-sm font-semibold text-gray-300 mb-2">
+                        No analysis yet
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        Enter a wallet address and click Analyze to see reputation results
+                      </p>
+                    </div>
+                  </section>
+                )}
                 </div>
               </main>
 

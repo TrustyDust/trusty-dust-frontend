@@ -44,9 +44,9 @@ export function BoostTrustCard({
           />
         </div>
       </div>
-      <button className="mt-6 w-full rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#3BA3FF]/50 hover:bg-white/10">
+      {/* <button className="mt-6 w-full rounded-2xl border border-white/20 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#3BA3FF]/50 hover:bg-white/10">
         Boost Your Trust Score
-      </button>
+      </button> */}
     </div>
   )
 }
