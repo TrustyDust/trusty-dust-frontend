@@ -6,11 +6,10 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -19,6 +18,7 @@ import { Address } from "viem"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { ROUTES } from "@/constant/route"
+import { useLoading } from "./loading-context"
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
@@ -46,13 +46,14 @@ export function AuthProvider({
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const router = useRouter()
   const loginApi = useLoginApi()
+  const { hide: hideLoad, show: showLoad } = useLoading()
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
 
-  const { openConnectModal: connectWithRainbow } = useConnectModal();
+  const { openConnectModal } = useConnectModal();
   const { address, isConnected } = useConnection()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
@@ -67,11 +68,7 @@ export function AuthProvider({
 
   const openLoginModal = useCallback(() => setShowLoginModal(true), [])
   const closeLoginModal = useCallback(() => setShowLoginModal(false), [])
-  const connectWithPrivy = () => {
-    connectWithPrivyOrigin()
-  }
 
-  // Initial JWT check from cookies (server -> client)
   useEffect(() => {
     const storedJwt =
       initialJwt ??
@@ -111,11 +108,12 @@ export function AuthProvider({
 
         const signature = await signMessageAsync({
           message: AUTH_MESSAGE,
-          account: address,
+          account: address as Address,
         })
 
-        const res = await loginApi.mutateAsync({
-          walletAddress: address,
+        showLoad()
+        await loginApi.mutateAsync({
+          walletAddress: address as Address,
           signature,
           message: AUTH_MESSAGE,
         })
@@ -134,12 +132,17 @@ export function AuthProvider({
         console.error(message)
         toast.error(message)
       } finally {
+        hideLoad()
         setConnecting(null)
       }
     }
 
     completeRainbowKitLogin()
-  }, [address, isConnected, isAuthenticated, loginApi.isPending, signMessageAsync, loginApi, disconnect, router])
+  }, [
+    initialJwt,
+    address,
+    isConnected
+  ])
 
   useEffect(() => {
     const completePrivyLogin = async () => {
@@ -166,7 +169,8 @@ export function AuthProvider({
           message: AUTH_MESSAGE,
         })
 
-        const res = await loginApi.mutateAsync({
+        showLoad()
+        await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
           message: AUTH_MESSAGE
@@ -186,12 +190,13 @@ export function AuthProvider({
         console.error(message)
         toast.error(message)
       } finally {
+        hideLoad()
         setConnecting(null)
       }
     }
 
     completePrivyLogin()
-  }, [authenticated, isAuthenticated, loginApi, loginApi.isPending, privySignMessage, privyUser, router, privyLogout])
+  }, [authenticated, privyUser])
 
   const logout = useCallback(async () => {
     try {
@@ -211,6 +216,20 @@ export function AuthProvider({
       setWalletAddress(null)
     }
   }, [disconnect, privyLogout])
+
+  const connectWithPrivy = () => {
+    connectWithPrivyOrigin()
+  }
+
+  const connectWithRainbow = () => {
+    if (isConnected) {
+      disconnect()
+      openConnectModal && openConnectModal()
+    } else {
+      openConnectModal && openConnectModal()
+    }
+  }
+
 
   const value = useMemo<AuthContextType>(
     () => ({

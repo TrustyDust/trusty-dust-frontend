@@ -11,6 +11,8 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
 import { AuthProvider } from "@/contexts/auth-context"
 import { LoginModal } from "@/components/dashboard/LoginModal"
 import { getWagmiConfig } from "@/lib/wagmi"
+import { privyConfig } from "@/lib/privy"
+import { LoadingProvider } from "@/contexts/loading-context"
 
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
@@ -20,48 +22,46 @@ export function Providers({
   initialJwt,
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
+  const loadKey = React.useId()
+  const privyKey = React.useId()
+  const wagmiKey = React.useId()
+  const rkKey = React.useId()
 
   return (
     <QueryClientProvider client={queryClient}>
-      <PrivyProvider
-        appId={privyAppId ?? ""}
-        config={{
-          appearance: {
-            theme: "dark",
-            accentColor: "#3BA3FF",
-          },
-          loginMethods: ["email", "google", "wallet"],
-          embeddedWallets: {
-            ethereum: {
-              createOnLogin: "users-without-wallets",
-            },
-          },
-        }}
-      >
-        <WagmiProvider config={wagmiConfig}>
-          <RainbowKitProvider>
-            <AuthProvider initialJwt={initialJwt}>
-              <TooltipProvider>
-                {children}
-                <Toaster
-                  key="trustydust-toaster"
-                  richColors
-                  closeButton
-                  position="top-right"
-                  toastOptions={{
-                    style: {
-                      background: "hsl(var(--background))",
-                      color: "hsl(var(--foreground))",
-                      border: "1px solid hsl(var(--border))",
-                    },
-                  }}
-                />
-                <LoginModal />
-              </TooltipProvider>
-            </AuthProvider>
-          </RainbowKitProvider>
-        </WagmiProvider>
-      </PrivyProvider>
+      <LoadingProvider key={loadKey}>
+        <PrivyProvider
+          key={privyKey}
+          appId={privyAppId ?? ""}
+          config={privyConfig}
+        >
+          <WagmiProvider key={wagmiKey} config={wagmiConfig}>
+            <RainbowKitProvider key={rkKey}>
+              <AuthProvider initialJwt={initialJwt}>
+                <TooltipProvider>
+                  <div className="contents">
+                    {children}
+                    <Toaster
+                      key="trustydust-toaster"
+                      richColors
+                      closeButton
+                      position="top-right"
+                      toastOptions={{
+                        style: {
+                          background: "hsl(var(--background))",
+                          color: "hsl(var(--foreground))",
+                          border: "1px solid hsl(var(--border))",
+                        },
+                      }}
+                    />
+                    <LoginModal />
+                  </div>
+                </TooltipProvider>
+              </AuthProvider>
+            </RainbowKitProvider>
+          </WagmiProvider>
+        </PrivyProvider>
+      </LoadingProvider>
     </QueryClientProvider>
   )
 }
