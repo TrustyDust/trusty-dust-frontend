@@ -1,6 +1,5 @@
 "use client"
-
-import * as React from "react"
+import { useMemo, useEffect, useId, ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "sonner"
@@ -20,12 +19,12 @@ const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 export function Providers({
   children,
   initialJwt,
-}: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
-  const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
-  const loadKey = React.useId()
-  const privyKey = React.useId()
-  const wagmiKey = React.useId()
-  const rkKey = React.useId()
+}: Readonly<{ children: ReactNode; initialJwt?: string | null }>) {
+  const wagmiConfig = useMemo(() => getWagmiConfig(), [])
+  const loadKey = useId()
+  const privyKey = useId()
+  const wagmiKey = useId()
+  const rkKey = useId()
 
   return (
     <QueryClientProvider client={queryClient}>

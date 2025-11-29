@@ -1,20 +1,20 @@
 // src/components/Navbar.tsx
-'use client';
+"use client"
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { Home, Users, ShoppingBag, User, PenSquare } from "lucide-react";
-import { cn } from "@/lib/utils";
+import Link from "next/link"
+import { usePathname } from "next/navigation"
+import { Home, Users, ShoppingBag, User, PenSquare } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 const Navbar = () => {
-  const pathname = usePathname(); // GANTI useLocation
+  const pathname = usePathname()
 
   const navItems = [
     { icon: Home, label: "Home", path: "/" },
     { icon: Users, label: "Feed", path: "/feed" },
     { icon: ShoppingBag, label: "Marketplace", path: "/marketplace" },
     { icon: User, label: "Profile", path: "/profile" },
-  ];
+  ]
 
   return (
     <nav className="fixed left-0 top-0 h-full w-20 bg-card border-r border-border z-50 flex flex-col items-center py-8 gap-8">
@@ -26,8 +26,8 @@ const Navbar = () => {
 
       <div className="flex-1 flex flex-col gap-4">
         {navItems.map((item) => {
-          const Icon = item.icon;
-          const isActive = pathname === item.path;
+          const Icon = item.icon
+          const isActive = pathname === item.path
 
           return (
             <Link
@@ -42,7 +42,7 @@ const Navbar = () => {
             >
               <Icon className="w-6 h-6" />
             </Link>
-          );
+          )
         })}
       </div>
 
@@ -53,7 +53,7 @@ const Navbar = () => {
         <PenSquare className="w-6 h-6 text-secondary-foreground" />
       </Link>
     </nav>
-  );
-};
+  )
+}
 
-export default Navbar;
+export default Navbar
