@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useEffect } from "react"
+import { useMemo } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "sonner"
@@ -24,7 +24,7 @@ export function Providers({
   children,
   initialJwt,
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
-  const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
+  const wagmiConfig = useMemo(() => getWagmiConfig(), [])
 
   return (
     <QueryClientProvider client={queryClient}>
