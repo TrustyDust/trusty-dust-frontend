@@ -6,7 +6,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
@@ -339,6 +338,20 @@ export function AuthProvider({
       }, 1000)
     }
   }, [disconnect, privyLogout, router])
+
+  const connectWithPrivy = () => {
+    connectWithPrivyOrigin()
+  }
+
+  const connectWithRainbow = () => {
+    if (isConnected) {
+      disconnect()
+      openConnectModal && openConnectModal()
+    } else {
+      openConnectModal && openConnectModal()
+    }
+  }
+
 
   const connectWithPrivy = () => {
     connectWithPrivyOrigin()

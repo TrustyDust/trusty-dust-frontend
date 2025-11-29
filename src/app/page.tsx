@@ -151,17 +151,15 @@ export default function Dashboard() {
                 </div>
               )}
 
-              {/* Empty State */}
-              {!feed.isLoading && !feed.error && (!feed.data?.data || feed.data.data.length === 0) && (
-                <div className="rounded-4xl border border-white/10 bg-[#030c1d]/85 p-12 text-center">
-                  <p className="text-sm font-semibold text-gray-300 mb-2">
-                    No posts yet
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    Be the first to share something with the community!
-                  </p>
-                </div>
-              )}
+                  <div className="mt-4 flex gap-3 overflow-hidden">
+                    {post.attachments.map((img, index) => (
+                      <div
+                        key={index}
+                        className="h-28 flex-1 rounded-2xl border border-white/5 bg-cover bg-center"
+                        style={{ backgroundImage: `url(${img})` }}
+                      />
+                    ))}
+                  </div>
 
               {/* Feed Posts */}
               {!feed.isLoading && !feed.error && feed.data?.data && feed.data.data.length > 0 && (

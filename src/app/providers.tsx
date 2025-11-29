@@ -21,11 +21,11 @@ export function Providers({
   children,
   initialJwt,
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
-  const wagmiConfig = useMemo(() => getWagmiConfig(), [])
-  const loadKey = useId()
-  const privyKey = useId()
-  const wagmiKey = useId()
-  const rkKey = useId()
+  const wagmiConfig = React.useMemo(() => getWagmiConfig(), [])
+  const loadKey = React.useId()
+  const privyKey = React.useId()
+  const wagmiKey = React.useId()
+  const rkKey = React.useId()
 
   return (
     <QueryClientProvider client={queryClient}>
