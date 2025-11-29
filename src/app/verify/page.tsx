@@ -1,12 +1,15 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronDown, Smile, Users, Loader2, AlertCircle } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ChevronDown, Smile, Users, Loader2, AlertCircle, X, CheckCircle2 } from "lucide-react"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { WalletAnalyzeLoading } from "@/components/dashboard/WalletAnalyzeLoading"
 import { useAnalyzeWalletApi } from "@/hooks/api/walletReputation"
-import { useCurrentUser, useCurrentUserId } from "@/hooks/page/useCurrentUser"
+import { useCurrentUserId } from "@/hooks/page/useCurrentUser"
+import { useTypingEffect } from "@/hooks/useTypingEffect"
+import { isValidEthereumAddress, normalizeWalletAddress } from "@/lib/wallet-utils"
 import { toast } from "sonner"
 import Image from "next/image"
 import type { WalletReputationResponse } from "@/types/api"
@@ -67,26 +70,102 @@ export default function VerifyPage() {
   const [selectorOpen, setSelectorOpen] = useState(false)
   const [walletAddress, setWalletAddress] = useState("")
   const [analyzeResult, setAnalyzeResult] = useState<WalletReputationResponse | null>(null)
+  const [visibleItems, setVisibleItems] = useState<Set<number>>(new Set())
+  const [addressError, setAddressError] = useState<string | null>(null)
   
-  const { user } = useCurrentUser()
   const userId = useCurrentUserId()
   const analyzeWallet = useAnalyzeWalletApi()
+  
+  // Validate address on change
+  const handleAddressChange = (value: string) => {
+    setWalletAddress(value)
+    
+    if (!value.trim()) {
+      setAddressError(null)
+      return
+    }
+    
+    if (!isValidEthereumAddress(value)) {
+      if (value.trim().length < 42) {
+        setAddressError("Wallet address must be 42 characters (0x + 40 hex characters)")
+      } else if (!value.trim().startsWith("0x")) {
+        setAddressError("Wallet address must start with '0x'")
+      } else if (!/^0x[a-fA-F0-9]*$/.test(value.trim())) {
+        setAddressError("Wallet address contains invalid characters (only 0-9, a-f, A-F allowed)")
+      } else {
+        setAddressError("Invalid wallet address format")
+      }
+    } else {
+      setAddressError(null)
+    }
+  }
+  
+  const handleClearResult = () => {
+    setAnalyzeResult(null)
+    setWalletAddress("")
+    setAddressError(null)
+  }
+  
+  // Typing effect untuk reasoning
+  const { displayedText: reasoningText, isTyping: isTypingReasoning } = useTypingEffect(
+    analyzeResult?.reasoning || null,
+    50 // speed: 50ms per kata
+  )
+  
+  // Staggered animation untuk breakdown items
+  useEffect(() => {
+    if (!analyzeResult) {
+      setVisibleItems(new Set())
+      return
+    }
+
+    // Reset visible items
+    setVisibleItems(new Set())
+
+    // Item breakdown order: Transaction History, Token Holdings, NFT Engagement, DeFi Activity, Contract Interaction
+    const itemOrder = [0, 1, 2, 3, 4] // Index untuk setiap item
+    const timeouts: NodeJS.Timeout[] = []
+    
+    itemOrder.forEach((index, orderIndex) => {
+      const timeoutId = setTimeout(() => {
+        setVisibleItems((prev) => new Set([...prev, index]))
+      }, 300 + orderIndex * 200) // 300ms initial delay + 200ms per item
+      timeouts.push(timeoutId)
+    })
+
+    return () => {
+      timeouts.forEach((timeout) => clearTimeout(timeout))
+    }
+  }, [analyzeResult])
 
   const handleAnalyze = async () => {
     if (!walletAddress.trim()) {
       toast.error("Please enter a wallet address")
+      setAddressError("Wallet address is required")
       return
     }
 
-    // Basic validation untuk Ethereum address format
-    if (!/^0x[a-fA-F0-9]{40}$/.test(walletAddress.trim())) {
+    // Validate using utility function
+    if (!isValidEthereumAddress(walletAddress)) {
+      toast.error("Invalid wallet address format")
+      handleAddressChange(walletAddress) // Trigger validation to show error
+      return
+    }
+
+    // Normalize address
+    const normalizedAddress = normalizeWalletAddress(walletAddress)
+    if (!normalizedAddress) {
       toast.error("Invalid wallet address format")
       return
     }
 
+    // Clear previous result when starting new analysis
+    setAnalyzeResult(null)
+    setAddressError(null)
+
     try {
       const result = await analyzeWallet.mutateAsync({
-        address: walletAddress.trim(),
+        address: normalizedAddress,
         chainId: DEFAULT_CHAIN_ID,
         userId: userId || undefined,
       })
@@ -173,58 +252,124 @@ export default function VerifyPage() {
             <>
               <main className="flex-1 pr-2 lg:max-w-3xl">
                 <div className="space-y-6">
-                <section className="rounded-[28px] border border-white/10 bg-[#040f25]/80 p-6 backdrop-blur">
-                  <h1 className="text-2xl font-semibold">
-                    Analyze Wallet Reputation
-                  </h1>
-                  <p className="mt-2 text-sm text-gray-400">
-                    Create a zero-knowledge proof that verifies your reputation
-                    tier without exposing your exact score or transaction
-                    history.
-                  </p>
-                  <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                    <input
-                      value={walletAddress}
-                      onChange={(e) => setWalletAddress(e.target.value)}
-                      onKeyDown={(e) => {
-                        if (e.key === "Enter" && !isLoading) {
-                          handleAnalyze()
-                        }
-                      }}
-                      disabled={isLoading}
-                      className="flex-1 rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
-                      placeholder="Enter Wallet Address (0x...)"
-                    />
-                    <button
-                      onClick={handleAnalyze}
-                      disabled={isLoading || !walletAddress.trim()}
-                      className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-3 text-sm font-semibold shadow-[0_10px_30px_rgba(46,127,255,0.45)] transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_10px_30px_rgba(46,127,255,0.45)]"
-                    >
-                      {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
-                      {isLoading ? "Analyzing..." : "Analyze"}
-                    </button>
-                  </div>
-                  
-                  {/* Error State */}
-                  {analyzeWallet.error && (
-                    <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-red-300">Analysis failed</p>
-                          <p className="text-xs text-red-400/80 mt-1">
-                            {analyzeWallet.error instanceof Error
-                              ? analyzeWallet.error.message
-                              : "Something went wrong. Please try again."}
-                          </p>
+                {/* Input Section - Only show when no result or loading */}
+                {(!analyzeResult || isLoading) && (
+                  <section className="rounded-[28px] border border-white/10 bg-[#040f25]/80 p-6 backdrop-blur">
+                    <h1 className="text-2xl font-semibold">
+                      Analyze Wallet Reputation
+                    </h1>
+                    <p className="mt-2 text-sm text-gray-400">
+                      Create a zero-knowledge proof that verifies your reputation
+                      tier without exposing your exact score or transaction
+                      history.
+                    </p>
+                    <div className="mt-4 flex flex-col gap-3">
+                      <div className="flex flex-col gap-3 sm:flex-row">
+                        <div className="flex-1 relative">
+                          <input
+                            value={walletAddress}
+                            onChange={(e) => handleAddressChange(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !isLoading && !addressError && isValidEthereumAddress(walletAddress)) {
+                                handleAnalyze()
+                              }
+                            }}
+                            disabled={isLoading}
+                            className={(() => {
+                              if (addressError) {
+                                return "w-full rounded-2xl border px-4 py-3 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-red-500/50 bg-red-500/5 focus:border-red-500/70"
+                              }
+                              if (walletAddress.trim() && isValidEthereumAddress(walletAddress)) {
+                                return "w-full rounded-2xl border px-4 py-3 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-green-500/50 bg-green-500/5 focus:border-green-500/70"
+                              }
+                              return "w-full rounded-2xl border px-4 py-3 pr-10 text-sm text-gray-200 placeholder:text-gray-500 focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-colors border-white/10 bg-[#050f22] focus:border-[#3BA3FF]/50"
+                            })()}
+                            placeholder="Enter Wallet Address (0x...)"
+                            maxLength={42}
+                          />
+                          {/* Validation Icon */}
+                          {walletAddress.trim() && (
+                            <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                              {addressError && (
+                                <AlertCircle className="h-4 w-4 text-red-400" />
+                              )}
+                              {!addressError && isValidEthereumAddress(walletAddress) && (
+                                <CheckCircle2 className="h-4 w-4 text-green-400" />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <button
+                          onClick={handleAnalyze}
+                          disabled={isLoading || !walletAddress.trim() || !!addressError || !isValidEthereumAddress(walletAddress)}
+                          className="flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-6 py-3 text-sm font-semibold shadow-[0_10px_30px_rgba(46,127,255,0.45)] transition disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-[0_10px_30px_rgba(46,127,255,0.45)]"
+                        >
+                          {isLoading && <Loader2 className="h-4 w-4 animate-spin" />}
+                          {isLoading ? "Analyzing..." : "Analyze"}
+                        </button>
+                      </div>
+                      
+                      {/* Validation Error Message */}
+                      {addressError && (
+                        <div className="flex items-start gap-2 text-xs text-red-400">
+                          <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <span>{addressError}</span>
+                        </div>
+                      )}
+                      
+                      {/* Validation Success Message */}
+                      {walletAddress.trim() && !addressError && isValidEthereumAddress(walletAddress) && (
+                        <div className="flex items-start gap-2 text-xs text-green-400">
+                          <CheckCircle2 className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+                          <span>Valid wallet address</span>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* API Error State */}
+                    {analyzeWallet.error && (
+                      <div className="mt-4 rounded-2xl border border-red-500/20 bg-red-500/10 p-4">
+                        <div className="flex items-start gap-3">
+                          <AlertCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <p className="text-sm font-semibold text-red-300">Analysis failed</p>
+                            <p className="text-xs text-red-400/80 mt-1">
+                              {analyzeWallet.error instanceof Error
+                                ? analyzeWallet.error.message
+                                : "Something went wrong. Please try again."}
+                            </p>
+                          </div>
                         </div>
                       </div>
+                    )}
+                  </section>
+                )}
+                
+                {/* Show result header with clear button when result exists */}
+                {analyzeResult && !isLoading && (
+                  <section className="rounded-[28px] border border-white/10 bg-[#040f25]/80 p-6 backdrop-blur">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h1 className="text-2xl font-semibold">
+                          Wallet Analysis Result
+                        </h1>
+                        <p className="mt-1 text-xs text-gray-400 font-mono">
+                          {analyzeResult.address}
+                        </p>
+                      </div>
+                      <button
+                        onClick={handleClearResult}
+                        className="flex items-center gap-2 rounded-xl border border-white/10 bg-[#050f22] px-4 py-2 text-sm font-semibold text-gray-200 transition hover:bg-white/10"
+                      >
+                        <X className="h-4 w-4" />
+                        Analyze Another
+                      </button>
                     </div>
-                  )}
-                </section>
+                  </section>
+                )}
 
-                {/* Result Section - Only show after analyze */}
-                {analyzeResult && (
+                {/* Result Section - Only show after analyze and not loading */}
+                {analyzeResult && !isLoading && (
                   <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-6 backdrop-blur">
                     <div className="flex flex-col gap-6 lg:flex-row">
                       <div className="flex flex-1 flex-col gap-4 rounded-[24px] p-6">
@@ -250,7 +395,12 @@ export default function VerifyPage() {
                         </div>
                         {analyzeResult.reasoning && (
                           <div className="mt-4 rounded-2xl border border-white/10 bg-[#050f22]/60 p-4">
-                            <p className="text-xs text-gray-400">{analyzeResult.reasoning}</p>
+                            <p className="text-xs text-gray-400">
+                              {reasoningText}
+                              {isTypingReasoning && (
+                                <span className="inline-block w-2 h-3 ml-1 bg-blue-400 animate-pulse" />
+                              )}
+                            </p>
                           </div>
                         )}
                       </div>
@@ -272,63 +422,112 @@ export default function VerifyPage() {
                     </div>
 
                     <div className="mt-6 grid gap-4 md:grid-cols-2">
-                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+                      {/* Transaction History */}
+                      <div
+                        className={`rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 transition-all duration-500 ${
+                          visibleItems.has(0)
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-4"
+                        }`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-300">
                           <span>Transaction History</span>
                           <span>{analyzeResult.breakdown.txnScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
-                            style={{ width: `${(analyzeResult.breakdown.txnScore / 1000) * 100}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] transition-all duration-700"
+                            style={{
+                              width: visibleItems.has(0) ? `${(analyzeResult.breakdown.txnScore / 1000) * 100}%` : "0%",
+                            }}
                           />
                         </div>
                       </div>
-                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+
+                      {/* Token Holdings */}
+                      <div
+                        className={`rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 transition-all duration-500 ${
+                          visibleItems.has(1)
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-4"
+                        }`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-300">
                           <span>Token Holdings</span>
                           <span>{analyzeResult.breakdown.tokenScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF]"
-                            style={{ width: `${(analyzeResult.breakdown.tokenScore / 1000) * 100}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF] transition-all duration-700"
+                            style={{
+                              width: visibleItems.has(1) ? `${(analyzeResult.breakdown.tokenScore / 1000) * 100}%` : "0%",
+                            }}
                           />
                         </div>
                       </div>
-                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+
+                      {/* NFT Engagement */}
+                      <div
+                        className={`rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 transition-all duration-500 ${
+                          visibleItems.has(2)
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-4"
+                        }`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-300">
                           <span>NFT Engagement</span>
                           <span>{analyzeResult.breakdown.nftScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
-                            style={{ width: `${(analyzeResult.breakdown.nftScore / 1000) * 100}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] transition-all duration-700"
+                            style={{
+                              width: visibleItems.has(2) ? `${(analyzeResult.breakdown.nftScore / 1000) * 100}%` : "0%",
+                            }}
                           />
                         </div>
                       </div>
-                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4">
+
+                      {/* DeFi Activity */}
+                      <div
+                        className={`rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 transition-all duration-500 ${
+                          visibleItems.has(3)
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-4"
+                        }`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-300">
                           <span>DeFi Activity</span>
                           <span>{analyzeResult.breakdown.defiScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF]"
-                            style={{ width: `${(analyzeResult.breakdown.defiScore / 1000) * 100}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#42E8E0] to-[#3BA3FF] transition-all duration-700"
+                            style={{
+                              width: visibleItems.has(3) ? `${(analyzeResult.breakdown.defiScore / 1000) * 100}%` : "0%",
+                            }}
                           />
                         </div>
                       </div>
-                      <div className="rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 md:col-span-2">
+
+                      {/* Contract Interaction */}
+                      <div
+                        className={`rounded-[20px] border border-white/5 bg-[#050f22]/70 p-4 md:col-span-2 transition-all duration-500 ${
+                          visibleItems.has(4)
+                            ? "opacity-100 translate-y-0"
+                            : "opacity-0 translate-y-4"
+                        }`}
+                      >
                         <div className="flex items-center justify-between text-sm text-gray-300">
                           <span>Contract Interaction</span>
                           <span>{analyzeResult.breakdown.contractScore}</span>
                         </div>
                         <div className="mt-2 h-2 rounded-full bg-white/5">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF]"
-                            style={{ width: `${(analyzeResult.breakdown.contractScore / 1000) * 100}%` }}
+                            className="h-full rounded-full bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] transition-all duration-700"
+                            style={{
+                              width: visibleItems.has(4) ? `${(analyzeResult.breakdown.contractScore / 1000) * 100}%` : "0%",
+                            }}
                           />
                         </div>
                       </div>
@@ -336,14 +535,9 @@ export default function VerifyPage() {
                   </section>
                 )}
 
-                {/* Loading State */}
+                {/* Loading State - Enhanced with animated steps */}
                 {isLoading && (
-                  <section className="rounded-[32px] border border-white/5 bg-[#030b1e]/90 p-12 backdrop-blur">
-                    <div className="flex flex-col items-center justify-center gap-4">
-                      <Loader2 className="h-8 w-8 animate-spin text-[#3BA3FF]" />
-                      <p className="text-sm text-gray-400">Analyzing wallet reputation...</p>
-                    </div>
-                  </section>
+                  <WalletAnalyzeLoading walletAddress={walletAddress} />
                 )}
 
                 {/* Empty State - Before analyze */}
