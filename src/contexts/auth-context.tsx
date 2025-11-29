@@ -9,7 +9,7 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -91,7 +91,6 @@ export function AuthProvider({
     }
   }, [initialJwt, router])
 
-  // Initial JWT check from cookies (server -> client)
   useEffect(() => {
     const storedJwt =
       initialJwt ??
