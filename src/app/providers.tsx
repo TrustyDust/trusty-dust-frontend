@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo, useId, ReactNode } from "react"
+import { useMemo, useId, ReactNode, useEffect } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "@/components/ui/sonner"
@@ -13,6 +13,7 @@ import { LoginModal } from "@/components/dashboard/LoginModal"
 import { getWagmiConfig } from "@/lib/wagmi"
 import { privyConfig } from "@/lib/privy"
 import { LoadingProvider } from "@/contexts/loading-context"
+import { setupErrorHandler } from "@/lib/error-handler"
 
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
@@ -26,11 +27,6 @@ export function Providers({
   const privyKey = useId()
   const wagmiKey = useId()
   const rkKey = useId()
-
-  // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
-  useEffect(() => {
-    setupErrorHandler()
-  }, [])
 
   // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
   useEffect(() => {
