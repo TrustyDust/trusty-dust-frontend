@@ -2,17 +2,24 @@ import { useQuery, useMutation } from "@tanstack/react-query"
 import { get, post } from "@/lib/http-client"
 import { API_ROUTES } from "@/constant/api"
 import type {
+  ChatMessage,
   Conversation,
   CreateConversationRequest,
   CreateConversationResponse,
-  ChatMessage,
   SendMessageRequest,
 } from "@/types/api"
 
-export const useConversationsApi = () =>
+type UseConversationsOptions = {
+  enabled?: boolean
+}
+
+export const useConversationsApi = (options?: UseConversationsOptions) =>
   useQuery<Conversation[]>({
     queryKey: ["chat-conversations"],
     queryFn: () => get<Conversation[]>(API_ROUTES.chat.conversations),
+    enabled: options?.enabled ?? true,
+    refetchOnWindowFocus: false,
+    staleTime: 30_000,
   })
 
 export const useCreateConversationApi = () =>
