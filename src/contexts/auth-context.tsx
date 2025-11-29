@@ -39,6 +39,33 @@ const checkExpiration = (jwt: string | null | undefined) => {
   }
 }
 
+const isUserRejectedError = (error: unknown): boolean => {
+  if (!error) return false
+  if (typeof error !== "object") return false
+  
+  const errorObj = error as Record<string, unknown>
+  
+  // Safely extract error name/code
+  let errorName = ""
+  if (typeof errorObj.name === "string") {
+    errorName = errorObj.name
+  } else if (typeof errorObj.code === "string") {
+    errorName = errorObj.code
+  }
+  
+  // Safely extract error message
+  const errorMessage = typeof errorObj.message === "string" 
+    ? errorObj.message 
+    : ""
+  
+  return (
+    errorName === "UserRejectedRequestError" ||
+    errorMessage.includes("User rejected") ||
+    errorMessage.includes("user rejected") ||
+    errorMessage.includes("UserRejectedRequestError")
+  )
+}
+
 export function AuthProvider({
   children,
   initialJwt,
@@ -48,10 +75,15 @@ export function AuthProvider({
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
-  const [connecting, setConnecting] = useState<AuthContextType["connecting"]>(null)
+  const [connecting, setConnecting] =
+    useState<AuthContextType["connecting"]>(null)
   const [showLoginModal, setShowLoginModal] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const isProcessingRainbowLogin = useRef(false)
+  const isProcessingPrivyLogin = useRef(false)
+  const isDisconnecting = useRef(false)
 
-  const { openConnectModal: connectWithRainbow } = useConnectModal();
+  const { openConnectModal: connectWithRainbow } = useConnectModal()
   const { address, isConnected } = useConnection()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
@@ -93,11 +125,12 @@ export function AuthProvider({
   useEffect(() => {
     const storedJwt =
       initialJwt ??
-      (
-        typeof document !== "undefined"
-          ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
-          : null
-      )
+      (typeof document === "undefined"
+        ? null
+        : document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("jwt="))
+            ?.split("=")[1] ?? null)
 
     const valid = checkExpiration(storedJwt)
     if (!valid && storedJwt) {
@@ -136,18 +169,10 @@ export function AuthProvider({
 
   useEffect(() => {
     const completeRainbowKitLogin = async () => {
-      try {
-        const storedJwt =
-          initialJwt ??
-          (
-            typeof document !== "undefined"
-              ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
-              : null
-          )
-
-        const valid = checkExpiration(storedJwt)
-
-        if (!address || !isConnected || isAuthenticated || loginApi.isPending || valid) return
+      // Prevent spam: check if already processing
+      if (isProcessingRainbowLogin.current) {
+        return
+      }
 
       // Don't trigger login if disconnecting
       if (isDisconnecting.current) {
@@ -197,7 +222,7 @@ export function AuthProvider({
         setWalletAddress(address)
         setShowLoginModal(false)
 
-        toast.success('sign in success')
+        toast.success("sign in success")
         router.replace(ROUTES.home)
       } catch (error) {
         const isUserRejected = isUserRejectedError(error)
@@ -227,17 +252,39 @@ export function AuthProvider({
     }
 
     completeRainbowKitLogin()
-  }, [address, isConnected, isAuthenticated, loginApi.isPending, signMessageAsync, loginApi, disconnect, router])
+  }, [
+    address,
+    isConnected,
+    isAuthenticated,
+    loginApi.isPending,
+    signMessageAsync,
+    loginApi,
+    disconnect,
+    router,
+    initialJwt,
+    isLoggingOut,
+  ])
 
   useEffect(() => {
     const completePrivyLogin = async () => {
+      // Prevent spam: check if already processing
+      if (isProcessingPrivyLogin.current) {
+        return
+      }
+
+      // Don't trigger login if disconnecting
+      if (isDisconnecting.current) {
+        return
+      }
+
       const storedJwt =
         initialJwt ??
-        (
-          typeof document !== "undefined"
-            ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
-            : null
-        )
+        (typeof document === "undefined"
+          ? null
+          : document.cookie
+              .split("; ")
+              .find((row) => row.startsWith("jwt="))
+              ?.split("=")[1] ?? null)
 
       const valid = checkExpiration(storedJwt)
       if (
@@ -245,8 +292,14 @@ export function AuthProvider({
         !privyUser?.wallet?.address ||
         isAuthenticated ||
         loginApi.isPending ||
-        valid
-      ) return
+        valid ||
+        isLoggingOut
+      )
+        return
+
+      // Set processing flag to prevent multiple calls
+      isProcessingPrivyLogin.current = true
+      setConnecting("privy")
 
       try {
         const wallet = privyUser.wallet.address
@@ -264,7 +317,7 @@ export function AuthProvider({
         setWalletAddress(wallet)
         setShowLoginModal(false)
 
-        toast.success('sign in success')
+        toast.success("sign in success")
         router.replace(ROUTES.home)
       } catch (error) {
         const isUserRejected = isUserRejectedError(error)
@@ -294,7 +347,41 @@ export function AuthProvider({
     }
 
     completePrivyLogin()
-  }, [authenticated, isAuthenticated, loginApi, loginApi.isPending, privySignMessage, privyUser, router, privyLogout])
+  }, [
+    authenticated,
+    isAuthenticated,
+    loginApi,
+    loginApi.isPending,
+    privySignMessage,
+    privyUser,
+    router,
+    privyLogout,
+    initialJwt,
+    isLoggingOut,
+  ])
+
+  // Handle wallet disconnect - prevent re-sign message
+  useEffect(() => {
+    if (!isConnected && !isLoggingOut && isAuthenticated) {
+      // Wallet was disconnected while authenticated (not through logout)
+      isDisconnecting.current = true
+      
+      // Clear auth state
+      setIsAuthenticated(false)
+      setWalletAddress(null)
+      
+      // Clear JWT from cookies
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+      }
+      
+      // Reset after cleanup
+      setTimeout(() => {
+        isDisconnecting.current = false
+      }, 1000)
+    }
+  }, [isConnected, isLoggingOut, isAuthenticated])
 
   const logout = useCallback(async () => {
     // Set disconnect flag to prevent re-sign message
@@ -305,17 +392,32 @@ export function AuthProvider({
       await privyLogout()
       disconnect()
 
+      // Clear JWT from cookies
       if (typeof document !== "undefined") {
         document.cookie = "jwt=; Max-Age=0; path=/"
-        router.replace(ROUTES.signIn)
+        // Also try to clear with different cookie formats for better compatibility
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
       }
 
+      setIsAuthenticated(false)
+      setWalletAddress(null)
       router.replace(ROUTES.signIn)
     } catch (error) {
       console.error("Logout error", error)
-    } finally {
+      // Ensure JWT is cleared even if logout fails
+      if (typeof document !== "undefined") {
+        document.cookie = "jwt=; Max-Age=0; path=/"
+        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+      }
       setIsAuthenticated(false)
       setWalletAddress(null)
+      router.replace(ROUTES.signIn)
+    } finally {
+      setIsLoggingOut(false)
+      // Reset disconnect flag after a delay to allow cleanup
+      setTimeout(() => {
+        isDisconnecting.current = false
+      }, 1000)
     }
   }, [disconnect, privyLogout, router])
 
