@@ -19,7 +19,7 @@ export function DashboardSidebar({
   return (
     <div className={cn("sticky top-28 flex h-fit w-full flex-col gap-6", className)}>
       <SidebarNavCard active={activeNav} />
-      <BoostTrustCard score={boostScore} label={boostLabel} />
+      <BoostTrustCard fallbackScore={boostScore} label={boostLabel} />
     </div>
   )
 }

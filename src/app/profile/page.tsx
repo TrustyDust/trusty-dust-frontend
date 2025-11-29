@@ -1,15 +1,26 @@
 'use client'
 
 import Image from "next/image"
-import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from "react"
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react"
 import {
   AlertCircle,
   Briefcase,
+  Camera,
   Heart,
+  Link2,
   Loader2,
   MessageCircle,
   PenSquare,
   RotateCcw,
+  Upload,
+  X,
 } from "lucide-react"
 import { toast } from "sonner"
 
@@ -20,7 +31,7 @@ import { useCurrentUser } from "@/hooks/page/useCurrentUser"
 import { useTierHistory } from "@/hooks/page/useTier"
 import { useUpdateMe, useUserJobs, useUserPosts } from "@/hooks/page/useUser"
 import { formatTimeAgo } from "@/lib/format-time"
-import { cn } from "@/lib/utils"
+import { cn, ipfsToGateway } from "@/lib/utils"
 import { trimWalletAddress } from "@/lib/wallet-utils"
 
 import Spark from "../../../public/tier/spark.svg"
@@ -31,15 +42,37 @@ type ProfileFormState = {
   jobType: string
 }
 
+type LinkFields = {
+  cv: string
+  github: string
+  portfolio: string
+}
+
+type LinkFieldKey = keyof LinkFields
+
+const FALLBACK_AVATAR = "https://api.dicebear.com/7.x/notionists/svg?seed=trusty"
+
+const LINK_FIELDS_META: Array<{
+  key: LinkFieldKey
+  label: string
+  icon: ReactNode
+}> = [
+  { key: "cv", label: "CV Upload", icon: <Upload className="h-4 w-4" /> },
+  { key: "github", label: "GitHub Link", icon: <Link2 className="h-4 w-4" /> },
+  { key: "portfolio", label: "Portfolio Link", icon: <Link2 className="h-4 w-4" /> },
+]
+
 const getInitials = (value?: string | null) => {
   if (!value) return "TD"
-  return value
-    .trim()
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((segment) => segment[0]?.toUpperCase() ?? "")
-    .join("") || "TD"
+  return (
+    value
+      .trim()
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((segment) => segment[0]?.toUpperCase() ?? "")
+      .join("") || "TD"
+  )
 }
 
 const formatReward = (value?: number) => {
@@ -91,6 +124,12 @@ export default function ProfilePage() {
     jobTitle: "",
     jobType: "",
   })
+  const [linkFields, setLinkFields] = useState<LinkFields>({
+    cv: "",
+    github: "",
+    portfolio: "",
+  })
+  const [isEditModalOpen, setEditModalOpen] = useState(false)
 
   useEffect(() => {
     if (!user) return
@@ -116,6 +155,17 @@ export default function ProfilePage() {
       setFormState((previous) => ({ ...previous, [field]: event.target.value }))
     }
 
+  const handleLinkChange =
+    (field: LinkFieldKey) =>
+    (event: ChangeEvent<HTMLInputElement>) => {
+      setLinkFields((previous) => ({ ...previous, [field]: event.target.value }))
+    }
+
+  const closeEditModal = () => {
+    if (updateProfile.isPending) return
+    setEditModalOpen(false)
+  }
+
   const handleUpdateProfile = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (!user || !isFormDirty || updateProfile.isPending) return
@@ -128,6 +178,7 @@ export default function ProfilePage() {
     updateProfile.mutate(payload, {
       onSuccess: () => {
         toast.success("Profile updated")
+        setEditModalOpen(false)
         refetchUser()
       },
       onError: (error) => {
@@ -152,16 +203,7 @@ export default function ProfilePage() {
       </div>
 
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6">
-        <DashboardHeader
-          actions={
-            <NavLink
-              href={"/profile/edit"}
-              className="hidden rounded-full border border-white/10 bg-white/5 px-5 py-2 text-sm font-semibold text-gray-100 transition hover:bg-white/10 sm:inline-flex"
-            >
-              Go to classic editor
-            </NavLink>
-          }
-        />
+        <DashboardHeader/>
 
         <div className="flex flex-col gap-6 lg:flex-row">
           <aside className="hidden w-60 shrink-0 lg:flex xl:w-64">
@@ -189,34 +231,43 @@ export default function ProfilePage() {
                 </div>
               ) : (
                 <div className="rounded-[28px] bg-gradient-to-r from-[#04112b] via-[#061c3f] to-[#082356] p-6">
-                  <div className="flex flex-col gap-4 md:flex-row md:items-center">
-                    <div className="relative">
-                      {user?.avatar ? (
-                        <Image
-                          src={user.avatar}
-                          alt={user.username ?? "Profile avatar"}
-                          width={80}
-                          height={80}
-                          unoptimized
-                          className="rounded-full border-4 border-white/10 object-cover"
-                        />
-                      ) : (
-                        <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/10 bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-xl font-semibold">
-                          {getInitials(user?.username)}
-                        </div>
-                      )}
-                      <Image src={Spark} alt="Tier badge" width={32} height={32} className="absolute -bottom-1 -right-1" />
+                  <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-center gap-4">
+                      <div className="relative">
+                        {user?.avatar ? (
+                          <Image
+                            src={user.avatar}
+                            alt={user.username ?? "Profile avatar"}
+                            width={80}
+                            height={80}
+                            unoptimized
+                            className="rounded-full border-4 border-white/10 object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-20 w-20 items-center justify-center rounded-full border-4 border-white/10 bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-xl font-semibold">
+                            {getInitials(user?.username)}
+                          </div>
+                        )}
+                        <Image src={Spark} alt="Tier badge" width={32} height={32} className="absolute -bottom-1 -right-1" />
+                      </div>
+                      <div>
+                        <h1 className="text-2xl font-semibold">{user?.username ?? walletDisplay}</h1>
+                        <p className="text-sm text-gray-400">{profileSubtitle}</p>
+                        <p className="text-xs text-gray-500">Wallet {walletDisplay}</p>
+                      </div>
                     </div>
-
-                    <div className="flex-1">
-                      <h1 className="text-2xl font-semibold">{user?.username ?? walletDisplay}</h1>
-                      <p className="text-sm text-gray-400">{profileSubtitle}</p>
-                      <p className="text-xs text-gray-500">Wallet {walletDisplay}</p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-center text-sm text-gray-200">
-                      Current Tier
-                      <p className="text-lg font-semibold text-white">{tierLabel}</p>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                      <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-center text-sm text-gray-200">
+                        Current Tier
+                        <p className="text-lg font-semibold text-white">{tierLabel}</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditModalOpen(true)}
+                        className="rounded-2xl border border-white/10 bg-white/5 px-5 py-2 text-sm font-semibold text-gray-200 transition hover:bg-white/10"
+                      >
+                        Edit profile
+                      </button>
                     </div>
                   </div>
 
@@ -297,7 +348,7 @@ export default function ProfilePage() {
                         <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
                           {post.media.map((media) => (
                             <div key={media.id} className="relative h-28 overflow-hidden rounded-2xl border border-white/5">
-                              <Image src={media.url} alt="Post asset" fill unoptimized className="object-cover" />
+                              <Image src={ipfsToGateway(media.url ?? "")} alt="Post asset" fill unoptimized className="object-cover" />
                             </div>
                           ))}
                         </div>
@@ -318,77 +369,28 @@ export default function ProfilePage() {
                 )}
               </div>
             </section>
-
-            <section className="rounded-[28px] border border-white/10 bg-[#040f25]/90 p-6 shadow-[0_15px_50px_rgba(5,10,30,0.5)] backdrop-blur">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">My posted jobs</h2>
-                  <p className="text-sm text-gray-400">Keep track of opportunities you've created.</p>
-                </div>
-                <button
-                  type="button"
-                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-gray-200 transition hover:border-[#6B4DFF]/50 hover:text-white disabled:opacity-60"
-                  onClick={() => refetchJobs()}
-                  disabled={jobsLoading}
-                >
-                  <RotateCcw className={cn("h-3.5 w-3.5", jobsLoading && "animate-spin text-white")} />
-                  Sync
-                </button>
-              </div>
-
-              <div className="mt-5 space-y-4">
-                {jobsLoading ? (
-                  Array.from({ length: 2 }).map((_, index) => (
-                    <div key={`job-skeleton-${index}`} className="h-28 animate-pulse rounded-2xl bg-white/5" />
-                  ))
-                ) : jobsError ? (
-                  <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
-                    <p className="flex items-center gap-2 font-semibold">
-                      <AlertCircle className="h-4 w-4" />
-                      Unable to load posted jobs
-                    </p>
-                    <p className="mt-1 text-xs text-red-200">
-                      {jobsErrorData?.message ?? "Please refresh to try again."}
-                    </p>
-                  </div>
-                ) : jobs.length === 0 ? (
-                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-sm text-gray-300">
-                    You have not posted any jobs yet. Share work opportunities to attract talent.
-                  </div>
-                ) : (
-                  jobs.map((job) => (
-                    <article key={job.id} className="rounded-[24px] border border-white/10 bg-[#030b1e]/80 p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
-                          <h4 className="text-base font-semibold text-white">{job.title}</h4>
-                          <p className="text-xs text-gray-400">
-                            {job.companyName ?? "Independent"} · {job.location ?? "Remote"}
-                          </p>
-                        </div>
-                        <span className={cn("rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide", getJobStatusBadge(job.status))}>
-                          {job.status}
-                        </span>
-                      </div>
-
-                      <div className="mt-3 flex flex-wrap items-center gap-4 text-xs text-gray-400">
-                        <span className="inline-flex items-center gap-1">
-                          <Briefcase className="h-3.5 w-3.5 text-[#42E8E0]" />
-                          {job.jobType ?? "Flexible"}
-                        </span>
-                        <span>Reward {formatReward(job.reward)}</span>
-                        <span>{job.applications} applicants</span>
-                        <span>Trust score ≥ {job.minTrustScore}</span>
-                      </div>
-
-                      <p className="mt-2 text-xs text-gray-500">Created {formatTimeAgo(job.createdAt)}</p>
-                    </article>
-                  ))
-                )}
-              </div>
-            </section>
           </main>
 
           <aside className="w-full shrink-0 space-y-6 lg:w-72 xl:w-80">
+              <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
+              <div className="flex items-center gap-3">
+                <PenSquare className="h-5 w-5 text-[#6B4DFF]" />
+                <div>
+                  <h3 className="text-lg font-semibold text-white">Edit profile</h3>
+                  <p className="text-xs text-gray-400">Polish your profile to improve discovery.</p>
+                </div>
+              </div>
+              <p className="mt-4 text-xs text-gray-400">
+                Update your public information, highlight your specialties, and make it easier for recruiters to reach out.
+              </p>
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(true)}
+                className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-4 py-3 text-sm font-semibold text-white shadow-[0_15px_45px_rgba(36,122,255,0.35)] transition hover:brightness-110"
+              >
+                Open editor
+              </button>
+            </section>
             <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -449,70 +451,247 @@ export default function ProfilePage() {
             </section>
 
             <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
-              <div className="flex items-center gap-3">
-                <PenSquare className="h-5 w-5 text-[#6B4DFF]" />
+              <div className="flex flex-col gap-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Edit profile</h3>
-                  <p className="text-xs text-gray-400">Polish your profile to improve discovery.</p>
+                  <h3 className="text-lg font-semibold text-white">My posted jobs</h3>
+                  <p className="text-xs text-gray-400">Opportunities you've created for the community.</p>
                 </div>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/10 px-4 py-2 text-[11px] font-semibold text-gray-200 transition hover:border-[#6B4DFF]/50 hover:text-white disabled:opacity-60"
+                  onClick={() => refetchJobs()}
+                  disabled={jobsLoading}
+                >
+                  <RotateCcw className={cn("h-3.5 w-3.5", jobsLoading && "animate-spin text-white")} />
+                  Sync
+                </button>
               </div>
 
-              <form onSubmit={handleUpdateProfile} className="mt-4 space-y-4">
-                <div>
-                  <label className="text-xs uppercase tracking-[0.2em] text-gray-500">Display name</label>
-                  <input
-                    type="text"
-                    value={formState.username}
-                    onChange={handleInputChange("username")}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#040a1c] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
-                    placeholder="e.g. Alex Rivera"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-[0.2em] text-gray-500">Job title</label>
-                  <input
-                    type="text"
-                    value={formState.jobTitle}
-                    onChange={handleInputChange("jobTitle")}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#040a1c] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
-                    placeholder="e.g. Product Designer"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs uppercase tracking-[0.2em] text-gray-500">Job type</label>
-                  <input
-                    type="text"
-                    value={formState.jobType}
-                    onChange={handleInputChange("jobType")}
-                    className="mt-2 w-full rounded-2xl border border-white/10 bg-[#040a1c] px-4 py-3 text-sm text-white placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
-                    placeholder="e.g. Full-time, Contract"
-                  />
-                </div>
-
-                {updateProfile.error ? (
-                  <p className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-100">
-                    {updateProfile.error.message}
-                  </p>
-                ) : null}
-
-                <button
-                  type="submit"
-                  disabled={!isFormDirty || updateProfile.isPending}
-                  className="flex w-full items-center justify-center gap-2 rounded-2xl border border-transparent bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-4 py-3 text-sm font-semibold text-white shadow-[0_15px_45px_rgba(36,122,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {updateProfile.isPending ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    "Save changes"
-                  )}
-                </button>
-              </form>
+              <div className="mt-4 space-y-4">
+                {jobsLoading ? (
+                  Array.from({ length: 2 }).map((_, index) => (
+                    <div key={`job-skeleton-${index}`} className="h-28 animate-pulse rounded-2xl bg-white/5" />
+                  ))
+                ) : jobsError ? (
+                  <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+                    <p className="flex items-center gap-2 font-semibold">
+                      <AlertCircle className="h-4 w-4" />
+                      Unable to load posted jobs
+                    </p>
+                    <p className="mt-1 text-xs text-red-200">
+                      {jobsErrorData?.message ?? "Please refresh to try again."}
+                    </p>
+                  </div>
+                ) : jobs.length === 0 ? (
+                  <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-6 text-center text-xs text-gray-300">
+                    You have not posted any jobs yet. Share work opportunities to attract talent.
+                  </div>
+                ) : (
+                  jobs.map((job) => (
+                    <article key={job.id} className="rounded-[24px] border border-white/10 bg-[#030b1e]/80 p-4 text-sm text-gray-300">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <h4 className="text-base font-semibold text-white">{job.title}</h4>
+                          <p className="text-[11px] text-gray-400">
+                            {job.companyName ?? "Independent"} · {job.location ?? "Remote"}
+                          </p>
+                        </div>
+                        <span className={cn(
+                          "rounded-full border px-3 py-1 text-[11px] font-semibold uppercase tracking-wide",
+                          getJobStatusBadge(job.status),
+                        )}>
+                          {job.status}
+                        </span>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] text-gray-400">
+                        <span className="inline-flex items-center gap-1">
+                          <Briefcase className="h-3.5 w-3.5 text-[#42E8E0]" />
+                          {job.jobType ?? "Flexible"}
+                        </span>
+                        <span>Reward {formatReward(job.reward)}</span>
+                        <span>{job.applications} applicants</span>
+                        <span>Trust score ≥ {job.minTrustScore}</span>
+                      </div>
+                      <p className="mt-2 text-[11px] text-gray-500">Created {formatTimeAgo(job.createdAt)}</p>
+                    </article>
+                  ))
+                )}
+              </div>
             </section>
+
+          
           </aside>
         </div>
+      </div>
+
+      <EditProfileModal
+        open={isEditModalOpen}
+        onClose={closeEditModal}
+        formState={formState}
+        onInputChange={handleInputChange}
+        onSubmit={handleUpdateProfile}
+        isSaving={updateProfile.isPending}
+        submitError={updateProfile.error}
+        isDirty={isFormDirty}
+        userAvatar={user?.avatar}
+        linkFields={linkFields}
+        onLinkChange={handleLinkChange}
+      />
+    </div>
+  )
+}
+
+type EditProfileModalProps = {
+  open: boolean
+  onClose: () => void
+  formState: ProfileFormState
+  onInputChange: (field: keyof ProfileFormState) => (event: ChangeEvent<HTMLInputElement>) => void
+  onSubmit: (event: FormEvent<HTMLFormElement>) => void
+  isSaving: boolean
+  isDirty: boolean
+  submitError: Error | null
+  userAvatar?: string | null
+  linkFields: LinkFields
+  onLinkChange: (field: LinkFieldKey) => (event: ChangeEvent<HTMLInputElement>) => void
+}
+
+function EditProfileModal({
+  open,
+  onClose,
+  formState,
+  onInputChange,
+  onSubmit,
+  isSaving,
+  isDirty,
+  submitError,
+  userAvatar,
+  linkFields,
+  onLinkChange,
+}: EditProfileModalProps) {
+  if (!open) return null
+
+  const avatarSrc = userAvatar ?? FALLBACK_AVATAR
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 px-4 py-6">
+      <div className="relative w-full max-w-4xl rounded-[32px] border border-white/10 bg-[#030b1e]/95 p-6 shadow-[0_25px_80px_rgba(2,6,20,0.65)]">
+        <button
+          type="button"
+          aria-label="Close"
+          className="absolute right-4 top-4 rounded-full border border-white/10 p-2 text-gray-400 transition hover:text-white"
+          onClick={onClose}
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <form onSubmit={onSubmit} className="space-y-6">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Profile</p>
+            <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-2xl font-semibold text-white">Edit profile</h2>
+              <div className="text-xs text-gray-500">Fields marked with * are public</div>
+            </div>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-[220px,1fr]">
+            <div className="rounded-3xl border border-white/10 bg-[#050f22] p-5 text-center">
+              <div className="relative mx-auto h-28 w-28">
+                <Image
+                  src={avatarSrc}
+                  alt="Current avatar"
+                  fill
+                  unoptimized
+                  className="rounded-3xl border border-white/10 object-cover"
+                />
+                <label className="absolute -bottom-3 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-3 py-1 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(46,127,255,0.5)]">
+                  <input type="file" className="hidden" />
+                  <span className="inline-flex items-center gap-1">
+                    <Camera className="h-3.5 w-3.5" />
+                    Replace
+                  </span>
+                </label>
+              </div>
+              <p className="mt-6 text-sm text-gray-400">Recommended: 400x400px, PNG or JPG</p>
+            </div>
+
+            <div className="space-y-4">
+              <label className="text-sm text-gray-400">
+                Display name*
+                <input
+                  value={formState.username}
+                  onChange={onInputChange("username")}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
+                  placeholder="Type here"
+                />
+              </label>
+              <label className="text-sm text-gray-400">
+                Job title*
+                <input
+                  value={formState.jobTitle}
+                  onChange={onInputChange("jobTitle")}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
+                  placeholder="e.g. Product Designer"
+                />
+              </label>
+              <label className="text-sm text-gray-400">
+                Job type*
+                <input
+                  value={formState.jobType}
+                  onChange={onInputChange("jobType")}
+                  className="mt-2 w-full rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3 text-sm text-gray-100 placeholder:text-gray-500 focus:border-[#2E7FFF] focus:outline-none"
+                  placeholder="Full-time, Contract, ..."
+                />
+              </label>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {LINK_FIELDS_META.map(({ key, label, icon }) => (
+              <label key={key} className="text-sm text-gray-400">
+                {label}
+                <div className="mt-2 flex items-center gap-3 rounded-2xl border border-white/10 bg-[#050f22] px-4 py-3">
+                  <span className="text-gray-500">{icon}</span>
+                  <input
+                    value={linkFields[key]}
+                    onChange={onLinkChange(key)}
+                    placeholder="Paste link"
+                    className="w-full bg-transparent text-sm text-gray-100 placeholder:text-gray-500 focus:outline-none"
+                  />
+                </div>
+              </label>
+            ))}
+          </div>
+
+          {submitError ? (
+            <p className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-xs text-red-100">
+              {submitError.message}
+            </p>
+          ) : null}
+
+          <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={onClose}
+              className="rounded-2xl border border-white/10 px-5 py-3 text-sm font-semibold text-gray-200 transition hover:bg-white/5"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={!isDirty || isSaving}
+              className="flex items-center justify-center gap-2 rounded-2xl border border-transparent bg-gradient-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-3 text-sm font-semibold text-white shadow-[0_15px_45px_rgba(36,122,255,0.35)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save changes"
+              )}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   )
