@@ -6,6 +6,12 @@ async function proxyRequest(
   { params }: { params: Promise<{ path: string | string[] }> }
 ) {
   const API_ENDPOINT = process.env.API_BASE_URL
+  if (!API_ENDPOINT) {
+    return new Response(
+      JSON.stringify({ message: "API_BASE_URL is not configured" }),
+      { status: 500, statusText: "Proxy configuration error" },
+    )
+  }
   const { path } = await params
 
   const cookieStore = await cookies()
@@ -22,7 +28,9 @@ async function proxyRequest(
   const url = new URL(request.url)
   const queryString = url.search || ""
 
-  const targetUrl = `${API_ENDPOINT}${API_PREFIX}${targetPath}${queryString}`
+  const base = API_ENDPOINT.replace(/\/+$/, "")
+  const prefix = API_PREFIX.startsWith("/") ? API_PREFIX : `/${API_PREFIX}`
+  const targetUrl = `${base}${prefix}${targetPath}${queryString}`
 
   const requestContentType = request.headers.get("content-type") || ""
   const isMultipartFormData = requestContentType.includes("multipart/form-data")
