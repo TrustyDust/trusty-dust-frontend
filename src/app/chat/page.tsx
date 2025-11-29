@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Search,
   Send,
+  User,
   Users,
 } from "lucide-react"
 import { toast } from "sonner"
@@ -21,8 +22,9 @@ import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 import { ROUTES } from "@/constant/route"
 import { useAuth } from "@/contexts/auth-context"
-import { useConversations, useMessages, useSendMessage } from "@/hooks/page/useChat"
+import { useConversations, useCreateConversation, useMessages, useSendMessage } from "@/hooks/page/useChat"
 import { useCurrentUser } from "@/hooks/page/useCurrentUser"
+import { useSearchPeople } from "@/hooks/page/useUser"
 import { formatTimeAgo } from "@/lib/format-time"
 import { cn } from "@/lib/utils"
 import type { Conversation, ConversationParticipant } from "@/types/api"
@@ -65,6 +67,8 @@ export default function ChatPage() {
   const [hasInitializedConversation, setHasInitializedConversation] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [messageInput, setMessageInput] = useState("")
+  const [pendingParticipantId, setPendingParticipantId] = useState<string | null>(null)
+  const searchKeyword = searchQuery.trim()
 
   const { isAuthenticated, openLoginModal } = useAuth()
   const { user } = useCurrentUser()
@@ -72,6 +76,7 @@ export default function ChatPage() {
   const {
     data: conversations = [],
     isLoading: conversationsLoading,
+    isFetching: conversationsFetching,
     isError: conversationsError,
     error: conversationsErrorData,
     refetch: refetchConversations,
@@ -87,6 +92,7 @@ export default function ChatPage() {
   } = useMessages(conversationIdForMessages)
 
   const sendMessage = useSendMessage()
+  const createConversation = useCreateConversation()
 
   const selectedConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === selectedConversationId) ?? null,
@@ -114,8 +120,25 @@ export default function ChatPage() {
     })
   }, [conversations, searchQuery, user?.id])
 
+  const shouldShowPeopleFallback =
+    !conversationsLoading && !conversationsError && filteredConversations.length === 0
+
+  const {
+    data: peopleSearchResult,
+    isLoading: peopleLoading,
+    isError: peopleError,
+    error: peopleErrorData,
+    refetch: refetchPeople,
+  } = useSearchPeople({
+    keyword: searchKeyword || undefined,
+    limit: 8,
+    enabled: isAuthenticated && shouldShowPeopleFallback,
+  })
+
+  const peopleResults = peopleSearchResult?.data ?? []
+
   useEffect(() => {
-    if (!isAuthenticated || conversations.length === 0) return
+    if (!isAuthenticated || conversationsLoading || conversations.length === 0) return
     const paramId = searchParams.get("conversationId")
 
     if (paramId && conversations.some((conversation) => conversation.id === paramId)) {
@@ -128,15 +151,15 @@ export default function ChatPage() {
       setSelectedConversationId(conversations[0].id)
       setHasInitializedConversation(true)
     }
-  }, [conversations, searchParams, isAuthenticated, hasInitializedConversation])
+  }, [conversations, conversationsLoading, searchParams, isAuthenticated, hasInitializedConversation])
 
   useEffect(() => {
-    if (!selectedConversationId || conversations.length === 0) return
+    if (!selectedConversationId || conversations.length === 0 || conversationsFetching) return
     const exists = conversations.some((conversation) => conversation.id === selectedConversationId)
     if (!exists) {
       setSelectedConversationId(conversations[0]?.id ?? null)
     }
-  }, [conversations, selectedConversationId])
+  }, [conversations, selectedConversationId, conversationsFetching])
 
   useEffect(() => {
     setMessageInput("")
@@ -146,6 +169,32 @@ export default function ChatPage() {
     if (!messagesEndRef.current) return
     messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
   }, [messages, selectedConversationId])
+
+  const handleStartConversation = (participantId: string) => {
+    if (!participantId || participantId === user?.id || createConversation.isPending) return
+    setPendingParticipantId(participantId)
+    createConversation.mutate(
+      { participantIds: [participantId] },
+      {
+        onSuccess: async (conversation) => {
+          toast.success("Conversation started")
+          await refetchConversations()
+          setSelectedConversationId(conversation.id)
+          setHasInitializedConversation(true)
+          const params = new URLSearchParams(searchParams.toString())
+          params.set("conversationId", conversation.id)
+          const queryString = params.toString()
+          router.replace(`${ROUTES.chat}${queryString ? `?${queryString}` : ""}`, { scroll: false })
+        },
+        onError: (error) => {
+          toast.error(error?.message ?? "Failed to start conversation")
+        },
+        onSettled: () => {
+          setPendingParticipantId(null)
+        },
+      },
+    )
+  }
 
   const handleSelectConversation = (conversationId: string) => {
     setSelectedConversationId(conversationId)
@@ -276,8 +325,89 @@ export default function ChatPage() {
                   </button>
                 </div>
               ) : filteredConversations.length === 0 ? (
-                <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-6 text-center text-sm text-gray-300">
-                  No conversations found.
+                <div className="space-y-3">
+                  <div className="rounded-2xl border border-white/10 bg-[#050f22]/70 px-4 py-4 text-sm text-gray-200">
+                    {conversations.length === 0
+                      ? "You don't have any conversations yet. Start one with the people below."
+                      : "No conversations match your search. Start a new thread with these people instead."}
+                  </div>
+                  {peopleLoading ? (
+                    Array.from({ length: 4 }).map((_, index) => (
+                      <div
+                        key={`people-skeleton-${index}`}
+                        className="h-16 w-full animate-pulse rounded-2xl border border-white/5 bg-white/5"
+                      />
+                    ))
+                  ) : peopleError ? (
+                    <div className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-100">
+                      <p className="flex items-center gap-2 font-semibold">
+                        <AlertCircle className="h-4 w-4" />
+                        Unable to load people
+                      </p>
+                      <p className="mt-1 text-xs text-red-200">
+                        {peopleErrorData?.message ?? "Please retry to discover trusted builders."}
+                      </p>
+                      <button
+                        type="button"
+                        className="mt-3 w-full rounded-xl border border-white/10 px-3 py-2 text-xs font-semibold text-gray-100 transition hover:border-[#FF8080]"
+                        onClick={() => refetchPeople()}
+                      >
+                        Try again
+                      </button>
+                    </div>
+                  ) : peopleResults.length === 0 ? (
+                    <div className="rounded-2xl border border-white/5 bg-white/5 px-4 py-6 text-center text-sm text-gray-300">
+                      We couldn't find anyone matching your filters yet.
+                    </div>
+                  ) : (
+                    peopleResults.map((person) => (
+                      <div
+                        key={person.id}
+                        className="flex flex-col gap-3 rounded-2xl border border-white/10 bg-[#050f22]/80 p-4 text-sm text-gray-200 xl:flex-row xl:items-center xl:justify-between"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF] text-xs font-semibold text-white">
+                            {(person.username ?? person.jobTitle ?? "TD")
+                              .split(" ")
+                              .map((word) => word.charAt(0))
+                              .join("")
+                              .slice(0, 2)
+                              .toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-white">
+                              {person.username ?? "Unnamed builder"}
+                            </p>
+                            <p className="text-xs text-gray-400">
+                              {person.jobTitle ?? "No job title"}
+                              {person.jobType ? ` · ${person.jobType}` : ""}
+                            </p>
+                            <p className="text-[11px] text-gray-500">
+                              Tier {person.tier} · {person.trustScore} trust score
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          className="flex items-center justify-center gap-2 rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-gray-100 transition hover:border-[#2E7FFF]/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() => handleStartConversation(person.id)}
+                          disabled={createConversation.isPending || pendingParticipantId === person.id}
+                        >
+                          {pendingParticipantId === person.id && createConversation.isPending ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                              Starting...
+                            </>
+                          ) : (
+                            <>
+                              <User className="h-3.5 w-3.5" />
+                              Start chat
+                            </>
+                          )}
+                        </button>
+                      </div>
+                    ))
+                  )}
                 </div>
               ) : (
                 filteredConversations.map((conversation) => {

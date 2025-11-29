@@ -1,16 +1,17 @@
-import { useQuery, useMutation } from "@tanstack/react-query"
-import { get, patch, post, del } from "@/lib/http-client"
+import { useMutation, useQuery } from "@tanstack/react-query"
+
 import { API_ROUTES } from "@/constant/api"
+import { del, get, patch, post } from "@/lib/http-client"
 import type {
-  UserProfile,
+  PaginatedResponse,
+  SuccessResponse,
   UpdateUserRequest,
+  UserProfile,
+  UserProfileJob,
+  UserProfilePost,
+  UserPublicProfile,
   UserSearchResponse,
   UserSuggestion,
-  SuccessResponse,
-  UserPublicProfile,
-  PaginatedResponse,
-  UserProfilePost,
-  UserProfileJob,
 } from "@/types/api"
 
 export const useMeApi = () =>
@@ -24,12 +25,52 @@ export const useUpdateMeApi = () =>
     mutationFn: (body) => patch<UserProfile>(API_ROUTES.users.update, body),
   })
 
-export const useSearchPeopleApi = (query: string) =>
-  useQuery<UserSearchResponse>({
-    queryKey: ["search-people", query],
-    queryFn: () => get<UserSearchResponse>(`${API_ROUTES.users.searchPeople}?q=${encodeURIComponent(query)}`),
-    enabled: !!query,
+type SearchPeopleParams =
+  | string
+  | ({
+      keyword?: string
+      jobTitle?: string
+      jobType?: string
+      limit?: number
+      cursor?: string
+      enabled?: boolean
+    } | undefined)
+
+export const useSearchPeopleApi = (params?: SearchPeopleParams) => {
+  const normalized =
+    typeof params === "string"
+      ? {
+          keyword: params,
+          enabled: params.trim().length > 0,
+        }
+      : params ?? {}
+
+  const { enabled, keyword, jobTitle, jobType, limit, cursor } = normalized
+
+  const searchParams = new URLSearchParams()
+  const trimmedKeyword = keyword?.trim()
+  const trimmedJobTitle = jobTitle?.trim()
+  const trimmedJobType = jobType?.trim()
+  if (trimmedKeyword) searchParams.set("keyword", trimmedKeyword)
+  if (trimmedJobTitle) searchParams.set("jobTitle", trimmedJobTitle)
+  if (trimmedJobType) searchParams.set("jobType", trimmedJobType)
+  if (typeof limit === "number") searchParams.set("limit", String(limit))
+  if (cursor) searchParams.set("cursor", cursor)
+
+  const queryString = searchParams.toString()
+  const requestUrl = queryString
+    ? `${API_ROUTES.users.searchPeople}?${queryString}`
+    : API_ROUTES.users.searchPeople
+  const shouldEnable =
+    enabled ?? (searchParams.has("keyword") || searchParams.has("jobTitle") || searchParams.has("jobType"))
+
+  return useQuery<UserSearchResponse>({
+    queryKey: ["search-people", queryString || "all"],
+    queryFn: () => get<UserSearchResponse>(requestUrl),
+    enabled: shouldEnable,
+    staleTime: 30_000,
   })
+}
 
 export const useSuggestedUsersApi = () =>
   useQuery<UserSuggestion[]>({
