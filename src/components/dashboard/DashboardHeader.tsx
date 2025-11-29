@@ -153,6 +153,14 @@ export function DashboardHeader({
     })
   }
 
+  const { user } = useCurrentUser()
+  
+  const displayName = useMemo(() => {
+    if (user?.username) return user.username
+    if (user?.walletAddress) return trimWalletAddress(user.walletAddress)
+    return ""
+  }, [user])
+
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
       if (isMenuOpen && menuRef.current && !menuRef.current.contains(event.target as Node)) {

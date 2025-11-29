@@ -14,11 +14,6 @@ import { getWagmiConfig } from "@/lib/wagmi"
 import { privyConfig } from "@/lib/privy"
 import { LoadingProvider } from "@/contexts/loading-context"
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  logout: () => void;
-}
-
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
