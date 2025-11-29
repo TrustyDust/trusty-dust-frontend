@@ -97,10 +97,6 @@ export default function Dashboard() {
         <DashboardHeader
           actions={
             <>
-              <button className="hidden items-center gap-2 rounded-2xl border border-[#3BA3FF]/40 bg-linear-to-r from-[#3587FF] to-[#5E4BFF] px-5 py-2 text-sm font-semibold tracking-wide text-white shadow-[0_10px_40px_rgba(51,129,255,0.35)] transition hover:scale-[1.01] hover:shadow-[0_10px_45px_rgba(83,75,255,0.45)] sm:flex">
-                <CloudUpload className="h-4 w-4" />
-                Post
-              </button>
               <div className="hidden rounded-full border border-white/10 bg-linear-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
                 $100 DUST
               </div>
