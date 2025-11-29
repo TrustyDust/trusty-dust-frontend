@@ -2,9 +2,13 @@
 
 import Image from "next/image"
 import { Heart, MessageCircle, User } from "lucide-react"
+import { NavLink } from "@/components/NavLink"
+
+import Spark from "../../../public/tier/spark.svg"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
+import { Nav } from "react-day-picker"
 
 const optimize = (url: string) => `${url}?auto=format&fit=crop&w=640&q=60`
 
@@ -112,14 +116,14 @@ export default function ProfilePage() {
                     <p className="text-sm text-gray-400">UI/UX Designer</p>
                   </div>
 
-                  <button className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200 hover:bg-white/10">
+                  <NavLink href={"/profile/edit"} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200 hover:bg-white/10">
                     Edit Profile
-                  </button>
+                  </NavLink>
                 </div>
 
                 <div className="mt-6 flex gap-6 text-sm font-semibold text-gray-400">
-                  <button className="border-b-2 border-[#3BA3FF] pb-2 text-white">Post</button>
-                  <button className="pb-2">Job Posted</button>
+                  <NavLink href={"/post"} className="border-b-2 border-[#3BA3FF] pb-2 text-white">Post</NavLink>
+                  <NavLink href={"/jobs"} className="pb-2">Job Posted</NavLink>
                 </div>
               </div>
             </section>
@@ -183,7 +187,7 @@ export default function ProfilePage() {
             <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF]">
-                  <Image src="/tier/spark.png" alt="Spark" width={32} height={32} />
+                  <Image src={Spark} alt="Spark" width={32} height={32} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold">Spark</p>
