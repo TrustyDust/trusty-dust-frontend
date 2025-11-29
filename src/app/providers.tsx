@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Toaster } from "sonner"
@@ -11,6 +11,7 @@ import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
 import { AuthProvider } from "@/contexts/auth-context"
 import { LoginModal } from "@/components/dashboard/LoginModal"
 import { getWagmiConfig } from "@/lib/wagmi"
+import { setupErrorHandler } from "@/lib/error-handler"
 
 interface AuthContextType {
   isAuthenticated: boolean;
@@ -25,6 +26,11 @@ export function Providers({
   initialJwt,
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const wagmiConfig = useMemo(() => getWagmiConfig(), [])
+
+  // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
+  useEffect(() => {
+    setupErrorHandler()
+  }, [])
 
   return (
     <QueryClientProvider client={queryClient}>
