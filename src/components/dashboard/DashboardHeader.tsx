@@ -54,7 +54,7 @@ export function DashboardHeader({
   searchFilters,
   selectedFilter,
   onFilterChange,
-}: DashboardHeaderProps) {
+}: Readonly<DashboardHeaderProps>) {
   const { isAuthenticated, logout, openLoginModal } = useAuth()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
