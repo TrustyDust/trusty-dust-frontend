@@ -79,19 +79,31 @@ async function request<T>(endpoint: string, options: RequestOptions = {}): Promi
     const url = endpoint
 
     const token = typeof window !== "undefined" ? localStorage.getItem("jwt") : null;
+    const isFormData = typeof FormData !== "undefined" && body instanceof FormData;
+
+    const computedHeaders: Record<string, string> = {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...headers,
+    };
+
+    const contentTypeKey = Object.keys(computedHeaders).find(
+        (key) => key.toLowerCase() === "content-type"
+    );
+
+    if (isFormData && contentTypeKey) {
+        delete computedHeaders[contentTypeKey];
+    } else if (!isFormData && !contentTypeKey) {
+        computedHeaders["Content-Type"] = "application/json";
+    }
 
     const config: RequestInit = {
         method,
-        headers: {
-            "Content-Type": "application/json",
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
-            ...headers,
-        },
+        headers: computedHeaders,
         ...fetchOptions,
     };
 
-    if (body && method !== HttpRequestMethod.Get) {
-        config.body = JSON.stringify(body);
+    if (body !== undefined && body !== null && method !== HttpRequestMethod.Get) {
+        config.body = isFormData ? body : JSON.stringify(body);
     }
 
     let attempt = 0;

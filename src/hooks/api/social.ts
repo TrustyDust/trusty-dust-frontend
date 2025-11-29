@@ -19,7 +19,7 @@ export const useFeedApi = () =>
   })
 
 export const useCreatePostApi = () =>
-  useMutation<PostWithMedia, Error, CreatePostRequest>({
+  useMutation<PostWithMedia, Error, CreatePostRequest | FormData>({
     mutationFn: (body) => post<PostWithMedia>(API_ROUTES.social.createPost, body),
   })
 
