@@ -1,15 +1,38 @@
 'use client'
 
 import Image from "next/image"
-import { Heart, MessageCircle, User } from "lucide-react"
-import { NavLink } from "@/components/NavLink"
-
-import Spark from "../../../public/tier/spark.svg"
+import {
+  useEffect,
+  useMemo,
+  useState,
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+} from "react"
+import {
+  AlertCircle,
+  Briefcase,
+  Camera,
+  Heart,
+  Link2,
+  Loader2,
+  MessageCircle,
+  PenSquare,
+  RotateCcw,
+  Upload,
+  X,
+} from "lucide-react"
+import { toast } from "sonner"
 
 import { NavLink } from "@/components/NavLink"
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
-import { Nav } from "react-day-picker"
+import { useCurrentUser } from "@/hooks/page/useCurrentUser"
+import { useTierHistory } from "@/hooks/page/useTier"
+import { useUpdateMe, useUserJobs, useUserPosts } from "@/hooks/page/useUser"
+import { formatTimeAgo } from "@/lib/format-time"
+import { cn, ipfsToGateway } from "@/lib/utils"
+import { trimWalletAddress } from "@/lib/wallet-utils"
 
 import Spark from "../../../public/tier/spark.svg"
 
@@ -189,33 +212,22 @@ export default function ProfilePage() {
 
           <main className="flex-1 space-y-6">
             <section className="rounded-[32px] border border-white/10 bg-[#030b1e]/90 p-6 shadow-[0_20px_60px_rgba(5,8,20,0.8)] backdrop-blur">
-              <div className="rounded-[28px] bg-gradient-to-r from-[#04112b] via-[#061c3f] to-[#082356] p-6">
-                <div className="flex items-center gap-4">
-                  <div className="relative">
-                    <Image
-                      src="/tier/avatar.png"
-                      alt="Walter White"
-                      width={80}
-                      height={80}
-                      className="rounded-full border-4 border-white/10 object-cover"
-                    />
-                    <Image
-                      src="/tier/spark.png"
-                      alt="Spark badge"
-                      width={32}
-                      height={32}
-                      className="absolute -bottom-1 -right-1"
-                    />
-                  </div>
-
-                  <div className="flex-1">
-                    <h1 className="text-2xl font-semibold">Walter White</h1>
-                    <p className="text-sm text-gray-400">UI/UX Designer</p>
-                  </div>
-
-                  <NavLink href={"/profile/edit"} className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-gray-200 hover:bg-white/10">
-                    Edit Profile
-                  </NavLink>
+              {userLoading ? (
+                <div className="h-52 animate-pulse rounded-[28px] bg-[#04112b]" />
+              ) : userError ? (
+                <div className="rounded-[28px] border border-red-500/30 bg-red-500/10 p-6 text-sm text-red-100">
+                  <p className="flex items-center gap-2 font-semibold">
+                    <AlertCircle className="h-4 w-4" />
+                    Failed to load your profile
+                  </p>
+                  <p className="mt-1 text-xs text-red-200">{userError.message}</p>
+                  <button
+                    type="button"
+                    className="mt-4 rounded-xl border border-white/10 px-4 py-2 text-xs font-semibold text-gray-100 transition hover:border-red-200"
+                    onClick={() => refetchUser()}
+                  >
+                    Try again
+                  </button>
                 </div>
               ) : (
                 <div className="rounded-[28px] bg-gradient-to-r from-[#04112b] via-[#061c3f] to-[#082356] p-6">
@@ -259,9 +271,24 @@ export default function ProfilePage() {
                     </div>
                   </div>
 
-                <div className="mt-6 flex gap-6 text-sm font-semibold text-gray-400">
-                  <NavLink href={"/post"} className="border-b-2 border-[#3BA3FF] pb-2 text-white">Post</NavLink>
-                  <NavLink href={"/jobs"} className="pb-2">Job Posted</NavLink>
+                  <div className="mt-6 grid grid-cols-2 gap-4 text-sm text-gray-300 sm:grid-cols-4">
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Trust Score</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{user?.trustScore ?? 0}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Posts</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{posts.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Jobs Posted</p>
+                      <p className="mt-2 text-2xl font-semibold text-white">{jobs.length}</p>
+                    </div>
+                    <div className="rounded-2xl border border-white/10 bg-white/5 p-4">
+                      <p className="text-xs uppercase tracking-[0.2em] text-gray-500">Wallet</p>
+                      <p className="mt-2 text-lg font-semibold text-white">{walletDisplay}</p>
+                    </div>
+                  </div>
                 </div>
               )}
             </section>
@@ -347,9 +374,7 @@ export default function ProfilePage() {
           <aside className="w-full shrink-0 space-y-6 lg:w-72 xl:w-80">
               <section className="rounded-[28px] border border-white/10 bg-[#030b1e]/90 p-6 backdrop-blur">
               <div className="flex items-center gap-3">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF]">
-                  <Image src={Spark} alt="Spark" width={32} height={32} />
-                </div>
+                <PenSquare className="h-5 w-5 text-[#6B4DFF]" />
                 <div>
                   <h3 className="text-lg font-semibold text-white">Edit profile</h3>
                   <p className="text-xs text-gray-400">Polish your profile to improve discovery.</p>
