@@ -4,18 +4,18 @@ import {
   Briefcase,
   CheckCircle2,
   CloudUpload,
-  Heart,
   Image as ImageIcon,
   Link2,
-  MessageCircle,
   Paperclip,
-  Plus,
   UserPlus,
+  AlertCircle,
 } from "lucide-react"
 
 import { DashboardHeader } from "@/components/dashboard/DashboardHeader"
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar"
 import { NavLink } from "@/components/NavLink"
+import { FeedPostCard } from "@/components/dashboard/FeedPostCard"
+import { FeedPostSkeleton } from "@/components/dashboard/FeedPostSkeleton"
 import useSocialViewModel from "@/hooks/page/useSocial"
 
 const composerActions = [
@@ -24,34 +24,6 @@ const composerActions = [
   { label: "Attachment", icon: Paperclip },
 ]
 
-const feedPosts = [
-  {
-    id: 1,
-    name: "Nova Arkan",
-    role: "Product Designer @Galactic",
-    trust: "92",
-    timestamp: "2m ago",
-    content:
-      "Experimenting with multi-chain credential sharing. TrustyDust makes it effortless to surface provable wins while keeping wallets private.",
-    attachments: ["", "", ""],
-    likes: 212,
-    comments: 54,
-    accent: "from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0]",
-  },
-  {
-    id: 2,
-    name: "Luna Reyes",
-    role: "DeFi Engineer @OrbitOps",
-    trust: "88",
-    timestamp: "14m ago",
-    content:
-      "We just shipped a trust-mining bounty. Looking for zk developers who love human-centric UX. Drop your latest build or DM me for briefs.",
-    attachments: ["", "", "", ""],
-    likes: 178,
-    comments: 39,
-    accent: "from-[#42E8E0] via-[#3BA3FF] to-[#6B4DFF]",
-  },
-]
 
 const suggestedPeople = [
   {
@@ -119,15 +91,6 @@ export default function Dashboard() {
           <main className="flex-1 pr-2 lg:max-w-3xl">
             <div className="space-y-6">
               <section className="rounded-[28px] border border-white/10 bg-[#040f25]/70 p-6 backdrop-blur">
-                <div className="flex items-center gap-4">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
-                    TR
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold">TrustyDust Ops</p>
-                    <p className="text-xs text-gray-400">Product Strategist</p>
-                  </div>
-                </div>
                 <div className="mt-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-gray-400">
                   Type Something…
                 </div>
@@ -158,63 +121,56 @@ export default function Dashboard() {
                 </h2>
               </div>
 
-              {feedPosts.map((post) => (
-                <article
-                  key={post.id}
-                  className="rounded-4xl border border-[#132852] bg-[#030c1d]/85 p-6 shadow-[0_20px_55px_rgba(2,8,27,0.85)] backdrop-blur"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-4">
-                      <div
-                        className={`flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br ${post.accent} text-lg font-semibold`}
-                      >
-                        {post.name
-                          .split(" ")
-                          .map((word) => word[0])
-                          .slice(0, 2)
-                          .join("")}
-                      </div>
-                      <div>
-                        <p className="font-semibold">{post.name}</p>
-                        <p className="text-xs text-gray-400">{post.role}</p>
-                        <div className="mt-1 flex items-center gap-2 text-xs text-[#7BDFFF]">
-                          <CheckCircle2 className="h-3.5 w-3.5" />
-                          Trust {post.trust}
-                          <span className="text-gray-500">•</span>
-                          {post.timestamp}
-                        </div>
-                      </div>
-                    </div>
-                    <button className="flex items-center gap-1 rounded-full border border-white/10 bg-[#031128] px-3 py-1 text-xs font-semibold text-gray-200 transition hover:bg-white/10">
-                      Follow
-                      <Plus className="h-3.5 w-3.5" />
-                    </button>
-                  </div>
+              {/* Loading State */}
+              {feed.isLoading && (
+                <div className="space-y-6">
+                  {[1, 2, 3].map((i) => (
+                    <FeedPostSkeleton key={i} />
+                  ))}
+                </div>
+              )}
 
-                  <p className="mt-4 text-sm text-gray-200">{post.content}</p>
+              {/* Error State */}
+              {!feed.isLoading && feed.error && (
+                <div className="rounded-4xl border border-red-500/20 bg-red-500/10 p-6 text-center">
+                  <AlertCircle className="mx-auto h-8 w-8 text-red-400 mb-2" />
+                  <p className="text-sm font-semibold text-red-300 mb-1">
+                    Failed to load feed
+                  </p>
+                  <p className="text-xs text-red-400/80">
+                    {feed.error instanceof Error
+                      ? feed.error.message
+                      : "Something went wrong. Please try again."}
+                  </p>
+                  <button
+                    onClick={() => feed.refetch()}
+                    className="mt-4 rounded-full bg-red-500/20 px-4 py-2 text-xs font-semibold text-red-300 transition hover:bg-red-500/30"
+                  >
+                    Retry
+                  </button>
+                </div>
+              )}
 
-                  <div className="mt-4 flex gap-3 overflow-hidden">
-                    {post.attachments.map((img,index) => (
-                      <div
-                        key={`${post.id}-${index}`}
-                        className="h-28 flex-1 rounded-2xl border border-white/5 bg-cover bg-center"
-                        style={{ backgroundImage: `url(${img})` }}
-                      />
-                    ))}
-                  </div>
+              {/* Empty State */}
+              {!feed.isLoading && !feed.error && (!feed.data?.data || feed.data.data.length === 0) && (
+                <div className="rounded-4xl border border-white/10 bg-[#030c1d]/85 p-12 text-center">
+                  <p className="text-sm font-semibold text-gray-300 mb-2">
+                    No posts yet
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    Be the first to share something with the community!
+                  </p>
+                </div>
+              )}
 
-                  <div className="mt-5 flex items-center justify-between text-sm text-gray-400">
-                    <button className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 transition hover:text-white">
-                      <Heart className="h-4 w-4 text-[#FF6EC7]" />
-                      {post.likes}
-                    </button>
-                    <button className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 transition hover:text-white">
-                      <MessageCircle className="h-4 w-4 text-[#7BDFFF]" />
-                      {post.comments} comments
-                    </button>
-                  </div>
-                </article>
-              ))}
+              {/* Feed Posts */}
+              {!feed.isLoading && !feed.error && feed.data?.data && feed.data.data.length > 0 && (
+                <div className="space-y-6">
+                  {feed.data.data.map((post) => (
+                    <FeedPostCard key={post.id} post={post} />
+                  ))}
+                </div>
+              )}
             </div>
           </main>
 
