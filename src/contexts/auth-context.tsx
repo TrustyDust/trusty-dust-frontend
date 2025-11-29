@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
@@ -43,9 +44,9 @@ const checkExpiration = (jwt: string | null | undefined) => {
 const isUserRejectedError = (error: unknown): boolean => {
   if (!error) return false
   if (typeof error !== "object") return false
-  
+
   const errorObj = error as Record<string, unknown>
-  
+
   // Safely extract error name/code
   let errorName = ""
   if (typeof errorObj.name === "string") {
@@ -53,12 +54,11 @@ const isUserRejectedError = (error: unknown): boolean => {
   } else if (typeof errorObj.code === "string") {
     errorName = errorObj.code
   }
-  
+
   // Safely extract error message
-  const errorMessage = typeof errorObj.message === "string" 
-    ? errorObj.message 
-    : ""
-  
+  const errorMessage =
+    typeof errorObj.message === "string" ? errorObj.message : ""
+
   return (
     errorName === "UserRejectedRequestError" ||
     errorMessage.includes("User rejected") ||
@@ -85,7 +85,7 @@ export function AuthProvider({
   const isProcessingPrivyLogin = useRef(false)
   const isDisconnecting = useRef(false)
 
-  const { openConnectModal } = useConnectModal();
+  const { openConnectModal } = useConnectModal()
   const { address, isConnected } = useConnection()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
@@ -127,11 +127,12 @@ export function AuthProvider({
   useEffect(() => {
     const storedJwt =
       initialJwt ??
-      (
-        typeof document !== "undefined"
-          ? document.cookie.split("; ").find((row) => row.startsWith("jwt="))?.split("=")[1] ?? null
-          : null
-      )
+      (typeof document !== "undefined"
+        ? document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("jwt="))
+            ?.split("=")[1] ?? null
+        : null)
 
     const valid = checkExpiration(storedJwt)
     if (!valid && storedJwt) {
@@ -213,7 +214,8 @@ export function AuthProvider({
         // Clear JWT from cookies on login failure
         if (typeof document !== "undefined") {
           document.cookie = "jwt=; Max-Age=0; path=/"
-          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+          document.cookie =
+            "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
         }
 
         // Don't show toast for user rejection - it's expected behavior
@@ -232,11 +234,7 @@ export function AuthProvider({
     }
 
     completeRainbowKitLogin()
-  }, [
-    initialJwt,
-    address,
-    isConnected
-  ])
+  }, [initialJwt, address, isConnected])
 
   useEffect(() => {
     const completePrivyLogin = async () => {
@@ -302,7 +300,8 @@ export function AuthProvider({
         // Clear JWT from cookies on login failure
         if (typeof document !== "undefined") {
           document.cookie = "jwt=; Max-Age=0; path=/"
-          document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
+          document.cookie =
+            "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
         }
 
         // Don't show toast for user rejection - it's expected behavior
@@ -360,6 +359,13 @@ export function AuthProvider({
       }, 1000)
     }
   }, [disconnect, privyLogout, router])
+
+  const connectWithPrivy = () => {
+    connectWithPrivyOrigin()
+  }
+  const connectWithRainbow = () => {
+    openConnectModal?.()
+  }
 
   const value = useMemo<AuthContextType>(
     () => ({
