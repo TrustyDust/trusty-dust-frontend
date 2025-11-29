@@ -3,7 +3,9 @@ import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
   images: {
-    domains: [], // tambah kalau external
+    domains: [
+      'images.unsplash.com',
+    ],
   },
   webpack(config) {
     config.module.rules.push({
