@@ -21,6 +21,7 @@ export const useInfiniteFeedApi = (options?: { limit?: number; commentPreviewLim
 
   return useInfiniteQuery<SocialFeedResponse>({
     queryKey: ["social-feed", limit, commentPreviewLimit],
+    initialPageParam: undefined,
     queryFn: ({ pageParam }) =>
       get<SocialFeedResponse>(
         reqQueryUrl(API_ROUTES.social.feed, {

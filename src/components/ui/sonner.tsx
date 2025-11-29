@@ -23,7 +23,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
             "group-[.toast]:bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] group-[.toast]:text-white group-[.toast]:font-semibold",
           cancelButton:
             "group-[.toast]:bg-transparent group-[.toast]:text-gray-300 group-[.toast]:border group-[.toast]:border-white/20 group-[.toast]:hover:bg-white/5",
-          loadingIcon: "text-[#7BDFFF]",
+          loader: "text-[#7BDFFF]",
           closeButton: "text-gray-400 hover:text-white",
         },
         style: {
