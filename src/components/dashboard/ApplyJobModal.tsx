@@ -1,122 +1,161 @@
 'use client'
 
-import { useState } from "react"
+import { FormEvent, useMemo, useState } from "react"
 import { X, Plus, Trash2 } from "lucide-react"
+import { toast } from "sonner"
+
+import { useApplyJobApi } from "@/hooks/api/jobs"
+import { getErrorMessage } from "@/lib/get-error-message"
 
 interface ApplyJobModalProps {
-    isOpen: boolean
-    onClose: () => void
-    jobTitle?: string
+  isOpen: boolean
+  onClose: () => void
+  jobId?: string
+  jobTitle?: string
 }
 
-export function ApplyJobModal({ isOpen, onClose, jobTitle }: ApplyJobModalProps) {
-    // Logic untuk dynamic portfolio links
-    const [links, setLinks] = useState<string[]>([""])
+export function ApplyJobModal({ isOpen, onClose, jobId, jobTitle }: ApplyJobModalProps) {
+  const [links, setLinks] = useState<string[]>([""])
+  const [cvUrl, setCvUrl] = useState("")
+  const [note, setNote] = useState("")
+  const applyJob = useApplyJobApi(jobId ?? "")
 
-    const addLink = () => {
-        setLinks([...links, ""])
+  const inputClass =
+    "w-full rounded-xl border border-white/10 bg-[#0A1325] px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#2E7FFF] focus:outline-none focus:ring-1 focus:ring-[#2E7FFF] transition-all"
+  const labelClass = "text-sm font-medium text-gray-300 mb-2 block"
+
+  const isDisabled = !jobId || applyJob.isPending
+
+  const filteredLinks = useMemo(() => links.map((link) => link.trim()).filter(Boolean), [links])
+
+  const resetForm = () => {
+    setLinks([""])
+    setCvUrl("")
+    setNote("")
+  }
+
+  const addLink = () => setLinks((prev) => [...prev, ""])
+
+  const updateLink = (index: number, value: string) => {
+    setLinks((prev) => prev.map((item, idx) => (idx === index ? value : item)))
+  }
+
+  const removeLink = (index: number) => {
+    setLinks((prev) => prev.filter((_, idx) => idx !== index))
+  }
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (!jobId) {
+      toast.error("Job is not available")
+      return
     }
-
-    const updateLink = (index: number, value: string) => {
-        const newLinks = [...links]
-        newLinks[index] = value
-        setLinks(newLinks)
+    try {
+      await applyJob.mutateAsync({
+        cvUrl: cvUrl.trim() || undefined,
+        portfolioLinks: filteredLinks,
+        extraMetadata: note.trim() ? { note: note.trim() } : undefined,
+      })
+      toast.success("Application submitted!")
+      resetForm()
+      onClose()
+    } catch (error) {
+      toast.error(getErrorMessage(error))
     }
+  }
 
-    const removeLink = (index: number) => {
-        const newLinks = links.filter((_, i) => i !== index)
-        setLinks(newLinks)
-    }
+  if (!isOpen) return null
 
-    // Jika tidak open, jangan render apa-apa
-    if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-lg rounded-[24px] border border-white/10 bg-[#050C24] p-6 shadow-2xl">
+        <form className="space-y-5" onSubmit={handleSubmit}>
+          <div className="flex items-center justify-between">
+            <div className="w-8" aria-hidden />
+            <h2 className="text-xl font-bold text-white">Apply to this job</h2>
+            <button
+              type="button"
+              onClick={() => {
+                resetForm()
+                onClose()
+              }}
+              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-gray-400 transition hover:bg-white/10 hover:text-white"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
 
-    // Styling
-    const inputClass = "w-full rounded-xl border border-white/10 bg-[#0A1325] px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#2E7FFF] focus:outline-none focus:ring-1 focus:ring-[#2E7FFF] transition-all"
-    const labelClass = "text-sm font-medium text-gray-300 mb-2 block"
+          {jobTitle && (
+            <p className="text-center text-sm font-medium text-[#2E7FFF]">Applying for: {jobTitle}</p>
+          )}
 
-    return (
-        // Backdrop / Overlay
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div>
+            <label className={labelClass}>CV or Resume URL</label>
+            <input
+              type="url"
+              value={cvUrl}
+              onChange={(event) => setCvUrl(event.target.value)}
+              placeholder="https://..."
+              className={inputClass}
+            />
+          </div>
 
-            {/* Modal Content */}
-            <div className="relative w-full max-w-lg rounded-[24px] border border-white/10 bg-[#050C24] p-6 shadow-2xl animate-in zoom-in-95 duration-200">
-
-                {/* Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <div className="w-8" /> {/* Spacer biar title center */}
-                    <h2 className="text-xl font-bold text-white text-center">Apply This Job</h2>
+          <div>
+            <label className={labelClass}>Portfolio Links</label>
+            <div className="space-y-3">
+              {links.map((link, idx) => (
+                <div key={`portfolio-${idx}`} className="flex gap-2">
+                  <input
+                    type="url"
+                    value={link}
+                    onChange={(event) => updateLink(idx, event.target.value)}
+                    placeholder="https://..."
+                    className={inputClass}
+                  />
+                  {links.length > 1 && (
                     <button
-                        onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white transition"
+                      type="button"
+                      onClick={() => removeLink(idx)}
+                      className="rounded-xl border border-red-500/20 bg-red-500/10 p-3 text-red-400 transition hover:bg-red-500/20"
                     >
-                        <X className="h-5 w-5" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
+                  )}
                 </div>
-
-                {/* Form */}
-                <div className="space-y-5">
-
-                    {/* Job Title Display (Optional) */}
-                    {jobTitle && (
-                        <div className="text-center text-sm text-[#2E7FFF] mb-2 font-medium">
-                            Applying for: {jobTitle}
-                        </div>
-                    )}
-
-                    {/* CV Upload */}
-                    <div>
-                        <label className={labelClass}>CV Upload</label>
-                        <input
-                            type="text"
-                            placeholder="Type Here (or URL)"
-                            className={inputClass}
-                        />
-                        {/* Note: Kalau mau file upload beneran, ganti type="file" */}
-                    </div>
-
-                    {/* Portfolio Links */}
-                    <div>
-                        <label className={labelClass}>Portfolio Link</label>
-                        <div className="space-y-3">
-                            {links.map((link, idx) => (
-                                <div key={idx} className="flex gap-2">
-                                    <input
-                                        type="text"
-                                        value={link}
-                                        onChange={(e) => updateLink(idx, e.target.value)}
-                                        placeholder="Type Here"
-                                        className={inputClass}
-                                    />
-                                    {links.length > 1 && (
-                                        <button
-                                            onClick={() => removeLink(idx)}
-                                            className="p-3 rounded-xl border border-red-500/20 bg-red-500/10 text-red-400 hover:bg-red-500/20"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                        </button>
-                                    )}
-                                </div>
-                            ))}
-
-                            <button
-                                onClick={addLink}
-                                className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl border border-dashed border-white/20 text-sm text-gray-400 hover:text-white hover:border-[#2E7FFF] hover:bg-[#2E7FFF]/5 transition"
-                            >
-                                <Plus className="w-4 h-4" /> Add More
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Action Button */}
-                    <div className="pt-4">
-                        <button className="w-full rounded-xl bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] py-3.5 text-base font-bold text-white shadow-[0_10px_30px_rgba(35,119,255,0.35)] hover:shadow-[0_15px_40px_rgba(35,119,255,0.5)] transition-all transform hover:-translate-y-0.5">
-                            Apply Now
-                        </button>
-                    </div>
-
-                </div>
+              ))}
+              <button
+                type="button"
+                onClick={addLink}
+                className="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/20 py-2.5 text-sm text-gray-400 transition hover:border-[#2E7FFF] hover:bg-[#2E7FFF]/5 hover:text-white"
+              >
+                <Plus className="h-4 w-4" /> Add Link
+              </button>
             </div>
-        </div>
-    )
+          </div>
+
+          <div>
+            <label className={labelClass}>Additional Notes</label>
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              placeholder="Share anything else the job owner should know..."
+              className="h-24 w-full rounded-xl border border-white/10 bg-[#0A1325] px-4 py-3 text-sm text-white placeholder-gray-500 focus:border-[#2E7FFF] focus:outline-none focus:ring-1 focus:ring-[#2E7FFF]"
+            />
+          </div>
+
+          {applyJob.error && (
+            <p className="text-xs font-medium text-red-400">{getErrorMessage(applyJob.error)}</p>
+          )}
+
+          <button
+            type="submit"
+            disabled={isDisabled}
+            className="w-full rounded-full bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] py-3 text-sm font-semibold text-white shadow-[0_15px_45px_rgba(35,119,255,0.35)] transition hover:shadow-[0_20px_60px_rgba(35,119,255,0.6)] disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {applyJob.isPending ? "Submitting..." : "Submit application"}
+          </button>
+        </form>
+      </div>
+    </div>
+  )
 }

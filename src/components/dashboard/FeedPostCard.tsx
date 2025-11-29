@@ -15,6 +15,7 @@ import { useFollowUserApi, useUnfollowUserApi } from "@/hooks/api/user"
 
 interface FeedPostCardProps {
   post: FeedPost
+  viewerId?: string | null
 }
 
 const accentColors = [
@@ -41,7 +42,7 @@ function getInitials(username: string | null | undefined, userId: string): strin
   return userId.slice(0, 2).toUpperCase()
 }
 
-function useFeedPostInteractions(post: FeedPost) {
+function useFeedPostInteractions(post: FeedPost, viewerId?: string | null) {
   const [isCommenting, setIsCommenting] = useState(false)
   const [commentText, setCommentText] = useState("")
   const [commentError, setCommentError] = useState<string | null>(null)
@@ -55,6 +56,8 @@ function useFeedPostInteractions(post: FeedPost) {
   const authorName = post.author.username || `User ${post.author.id.slice(0, 8)}`
   const authorInitials = getInitials(post.author.username, post.author.id)
   const accentColor = getAccentColor(post.id.codePointAt(0) ?? 0)
+  const canFollow =
+    viewerId === undefined || viewerId === null ? true : viewerId !== post.author.id
 
   const updateFeedCache = (updater: (current: FeedPost) => FeedPost) => {
     queryClient.setQueryData<SocialFeedResponse>(["social-feed"], (prev) => {
@@ -67,6 +70,9 @@ function useFeedPostInteractions(post: FeedPost) {
   }
 
   const handleFollowToggle = async () => {
+    if (!canFollow) {
+      return
+    }
     try {
       if (post.author.isFollowedByViewer) {
         await unfollowMutation.mutateAsync({ id: post.author.id })
@@ -182,6 +188,7 @@ function useFeedPostInteractions(post: FeedPost) {
     authorName,
     authorInitials,
     accentColor,
+    canFollow,
     isCommenting,
     commentText,
     commentError,
@@ -197,11 +204,12 @@ function useFeedPostInteractions(post: FeedPost) {
   }
 }
 
-export function FeedPostCard({ post }: Readonly<FeedPostCardProps>) {
+export function FeedPostCard({ post, viewerId }: Readonly<FeedPostCardProps>) {
   const {
     authorName,
     authorInitials,
     accentColor,
+    canFollow,
     isCommenting,
     commentText,
     commentError,
@@ -214,9 +222,12 @@ export function FeedPostCard({ post }: Readonly<FeedPostCardProps>) {
     isFollowPending,
     isLikeAction,
     isCommentAction,
-  } = useFeedPostInteractions(post)
+  } = useFeedPostInteractions(post, viewerId)
 
   const renderFollowIcon = () => {
+    if (!canFollow) {
+      return null
+    }
     if (isFollowPending) {
       return <Loader2 className="h-3.5 w-3.5 animate-spin" />
     }
@@ -255,19 +266,21 @@ export function FeedPostCard({ post }: Readonly<FeedPostCardProps>) {
             </div>
           </div>
         </div>
-        <button
-          type="button"
-          onClick={handleFollowToggle}
-          disabled={isFollowPending}
-          className={`flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-semibold transition ${
-            post.author.isFollowedByViewer
-              ? "bg-white/5 text-gray-200 hover:bg-white/10"
-              : "bg-[#031128] text-gray-200 hover:bg-white/10"
-          } ${isFollowPending ? "opacity-70" : ""}`}
-        >
-          {renderFollowIcon()}
-          {post.author.isFollowedByViewer ? "Following" : "Follow"}
-        </button>
+        {canFollow && (
+          <button
+            type="button"
+            onClick={handleFollowToggle}
+            disabled={isFollowPending}
+            className={`flex items-center gap-1 rounded-full border border-white/10 px-3 py-1 text-xs font-semibold transition ${
+              post.author.isFollowedByViewer
+                ? "bg-white/5 text-gray-200 hover:bg-white/10"
+                : "bg-[#031128] text-gray-200 hover:bg-white/10"
+            } ${isFollowPending ? "opacity-70" : ""}`}
+          >
+            {renderFollowIcon()}
+            {post.author.isFollowedByViewer ? "Following" : "Follow"}
+          </button>
+        )}
       </div>
 
       <p className="mt-4 text-sm text-gray-200">{post.text}</p>

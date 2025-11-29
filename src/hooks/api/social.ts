@@ -1,6 +1,7 @@
-import { useQuery, useMutation } from "@tanstack/react-query"
+import { useQuery, useMutation, useInfiniteQuery } from "@tanstack/react-query"
 import { get, post } from "@/lib/http-client"
 import { API_ROUTES } from "@/constant/api"
+import { reqQueryUrl } from "@/lib/utils"
 import type {
   SocialFeedResponse,
   CreatePostRequest,
@@ -12,11 +13,27 @@ import type {
   PostBoostResponse,
 } from "@/types/api"
 
-export const useFeedApi = () =>
-  useQuery<SocialFeedResponse>({
-    queryKey: ["social-feed"],
-    queryFn: () => get<SocialFeedResponse>(API_ROUTES.social.feed),
+export const FEED_PAGE_SIZE = 3
+
+export const useInfiniteFeedApi = (options?: { limit?: number; commentPreviewLimit?: number }) => {
+  const limit = options?.limit ?? FEED_PAGE_SIZE
+  const commentPreviewLimit = options?.commentPreviewLimit ?? 3
+
+  return useInfiniteQuery<SocialFeedResponse>({
+    queryKey: ["social-feed", limit, commentPreviewLimit],
+    queryFn: ({ pageParam }) =>
+      get<SocialFeedResponse>(
+        reqQueryUrl(API_ROUTES.social.feed, {
+          limit,
+          commentPreviewLimit,
+          cursor: pageParam ?? undefined,
+        }),
+      ),
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
   })
+}
+
+export const useFeedApi = () => useInfiniteFeedApi()
 
 export const useCreatePostApi = () =>
   useMutation<PostWithMedia, Error, CreatePostRequest | FormData>({

@@ -3,7 +3,7 @@
 import { useMemo, useId, ReactNode } from "react"
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { Toaster } from "sonner"
+import { Toaster } from "@/components/ui/sonner"
 import { PrivyProvider } from "@privy-io/react-auth"
 import { WagmiProvider } from "wagmi"
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit"
@@ -41,19 +41,7 @@ export function Providers({
                 <TooltipProvider>
                   <div className="contents">
                     {children}
-                    <Toaster
-                      key="trustydust-toaster"
-                      richColors
-                      closeButton
-                      position="top-right"
-                      toastOptions={{
-                        style: {
-                          background: "hsl(var(--background))",
-                          color: "hsl(var(--foreground))",
-                          border: "1px solid hsl(var(--border))",
-                        },
-                      }}
-                    />
+                    <Toaster key="trustydust-toaster" />
                     <LoginModal />
                   </div>
                 </TooltipProvider>

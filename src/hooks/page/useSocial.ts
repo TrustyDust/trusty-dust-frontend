@@ -1,13 +1,13 @@
 
-import { useFeedApi, useCreatePostApi, usePostDetailApi, useReactPostApi, useBoostPostApi } from "../api/social"
+import { useInfiniteFeedApi, useCreatePostApi, usePostDetailApi, useReactPostApi, useBoostPostApi } from "../api/social"
 
 export default function useSocialViewModel () {
-  const feed = useFeedApi()
+  const feed = useInfiniteFeedApi()
   const createPost = useCreatePostApi()
   return { feed, createPost }
 }
 
-export const useFeed = useFeedApi
+export const useFeed = useInfiniteFeedApi
 export const useCreatePost = useCreatePostApi
 export const usePostDetail = usePostDetailApi
 export const useReactPost = useReactPostApi

@@ -1,6 +1,6 @@
 "use client"
 
-import { FormEvent, useState } from "react"
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react"
 import {
   Briefcase,
   CheckCircle2,
@@ -23,9 +23,10 @@ import { FeedPostSkeleton } from "@/components/dashboard/FeedPostSkeleton"
 import useSocialViewModel from "@/hooks/page/useSocial"
 import { Textarea } from "@/components/ui/textarea"
 import { Skeleton } from "@/components/ui/skeleton"
-import { useSuggestedUsersApi, useFollowUserApi } from "@/hooks/api/user"
+import { useSuggestedUsersApi, useFollowUserApi, useMeApi } from "@/hooks/api/user"
 import { useMyJobsApi } from "@/hooks/api/jobs"
 import type { SocialFeedResponse, UserSuggestion } from "@/types/api"
+import { getErrorMessage } from "@/lib/get-error-message"
 
 const composerActions = [
   { label: "Image", icon: ImageIcon },
@@ -47,21 +48,35 @@ const SUGGESTED_SCROLLER_SKELETONS = [
 const SUGGESTED_CARD_SKELETONS = ["suggest-card-1", "suggest-card-2", "suggest-card-3"]
 const JOB_CARD_SKELETONS = ["job-card-1", "job-card-2", "job-card-3"]
 
-function getErrorMessage(error: unknown) {
-  if (error instanceof Error) {
-    return error.message
-  }
-  if (typeof error === "string") {
-    return error
-  }
-  return "Something went wrong. Please try again."
-}
-
 export default function Dashboard() {
   const queryClient = useQueryClient()
   const { feed, createPost } = useSocialViewModel()
+  const me = useMeApi()
   const [composerText, setComposerText] = useState("")
   const [composerError, setComposerError] = useState<string | null>(null)
+  const loadMoreRef = useRef<HTMLDivElement | null>(null)
+
+  const feedPages = (feed.data?.pages ?? []) as SocialFeedResponse[]
+  const feedPosts = useMemo(() => feedPages.flatMap((page) => page.data), [feedPages])
+  const hasNoPosts = !feed.isLoading && !feed.error && feedPosts.length === 0
+
+  useEffect(() => {
+    const node = loadMoreRef.current
+    if (!node) return
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries
+        if (entry.isIntersecting && feed.hasNextPage && !feed.isFetchingNextPage) {
+          feed.fetchNextPage().catch(() => {})
+        }
+      },
+      { threshold: 0.5 },
+    )
+
+    observer.observe(node)
+    return () => observer.disconnect()
+  }, [feed.hasNextPage, feed.isFetchingNextPage, feed.fetchNextPage])
 
   const remainingCharacters = Math.max(0, POST_CHARACTER_LIMIT - composerText.length)
 
@@ -96,11 +111,9 @@ export default function Dashboard() {
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6 pb-10">
         <DashboardHeader
           actions={
-            <>
-              <div className="hidden rounded-full border border-white/10 bg-linear-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
-                $100 DUST
-              </div>
-            </>
+            <div className="hidden rounded-full border border-white/10 bg-linear-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
+              $100 DUST
+            </div>
           }
         />
 
@@ -196,7 +209,7 @@ export default function Dashboard() {
               )}
 
               {/* Empty State */}
-              {!feed.isLoading && !feed.error && (!feed.data?.data || feed.data.data.length === 0) && (
+              {hasNoPosts && (
                 <div className="rounded-4xl border border-white/10 bg-[#030c1d]/85 p-12 text-center">
                   <p className="text-sm font-semibold text-gray-300 mb-2">
                     No posts yet
@@ -208,12 +221,32 @@ export default function Dashboard() {
               )}
 
               {/* Feed Posts */}
-              {!feed.isLoading && !feed.error && feed.data?.data && feed.data.data.length > 0 && (
-                <div className="space-y-6">
-                  {feed.data.data.map((post) => (
-                    <FeedPostCard key={post.id} post={post} />
-                  ))}
-                </div>
+              {!feed.isLoading && !feed.error && feedPosts.length > 0 && (
+                <>
+                  <div className="space-y-6">
+                    {feedPosts.map((post) => (
+                      <FeedPostCard key={post.id} post={post} viewerId={me.data?.id} />
+                    ))}
+                  </div>
+                  <div ref={loadMoreRef} className="h-8 w-full" aria-hidden />
+                  {feed.isFetchingNextPage && (
+                    <div className="flex items-center justify-center gap-2 text-xs text-gray-400">
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Loading more posts…
+                    </div>
+                  )}
+                  {!feed.isFetchingNextPage && feed.hasNextPage && (
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        onClick={() => feed.fetchNextPage()}
+                        className="rounded-full border border-white/10 px-4 py-2 text-xs font-semibold text-gray-200 transition hover:bg-white/10"
+                      >
+                        Load more
+                      </button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           </main>

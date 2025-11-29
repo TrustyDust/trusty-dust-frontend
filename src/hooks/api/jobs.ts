@@ -1,6 +1,7 @@
 import { useQuery, useMutation } from "@tanstack/react-query"
 import { get, post } from "@/lib/http-client"
 import { API_ROUTES } from "@/constant/api"
+import { reqQueryUrl } from "@/lib/utils"
 import type {
   JobWithMeta,
   JobApplicationWithJob,
@@ -13,6 +14,7 @@ import type {
   ApplyJobBody,
   SubmitWorkBody,
   ConfirmWorkBody,
+  SearchJobsQuery,
 } from "@/types/api"
 
 export const useMyJobsApi = () =>
@@ -34,11 +36,19 @@ export const useJobApplicantsApi = (id: string) =>
     enabled: !!id,
   })
 
-export const useSearchJobsApi = (query: string) =>
+export const useSearchJobsApi = (query?: SearchJobsQuery & { limit?: number }) =>
   useQuery<JobSearchResponse>({
-    queryKey: ["jobs-search", query],
-    queryFn: () => get<JobSearchResponse>(`${API_ROUTES.jobs.search}?q=${encodeURIComponent(query)}`),
-    enabled: !!query,
+    queryKey: ["jobs-search", query ?? {}],
+    queryFn: () =>
+      get<JobSearchResponse>(
+        reqQueryUrl(API_ROUTES.jobs.search, {
+          keyword: query?.keyword,
+          jobType: query?.jobType,
+          jobTitle: query?.jobTitle,
+          cursor: query?.cursor,
+          limit: query?.limit ?? 10,
+        }),
+      ),
   })
 
 export const useHotJobsApi = () =>
@@ -48,7 +58,7 @@ export const useHotJobsApi = () =>
   })
 
 export const useCreateJobApi = () =>
-  useMutation<Job, Error, CreateJobRequest>({
+  useMutation<Job, Error, CreateJobRequest | FormData>({
     mutationFn: (body) => post<Job>(API_ROUTES.jobs.create, body),
   })
 
