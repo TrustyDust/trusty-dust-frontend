@@ -194,9 +194,9 @@ export default function Dashboard() {
                   <p className="mt-4 text-sm text-gray-200">{post.content}</p>
 
                   <div className="mt-4 flex gap-3 overflow-hidden">
-                    {post.attachments.map((img) => (
+                    {post.attachments.map((img,index) => (
                       <div
-                        key={img}
+                        key={`${post.id}-${index}`}
                         className="h-28 flex-1 rounded-2xl border border-white/5 bg-cover bg-center"
                         style={{ backgroundImage: `url(${img})` }}
                       />

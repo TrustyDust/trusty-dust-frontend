@@ -17,12 +17,19 @@ export async function middleware(request: NextRequest) {
     const publicPages = [signIn as string];
     const isPublicPage = publicPages.includes(pathname);
 
-    const redirect = (url: string) =>
-        NextResponse.redirect(new URL(url, request.url));
+    const redirect = (url: string) => {
+        if (pathname === url) {
+            return NextResponse.next();
+        }
+        return NextResponse.redirect(new URL(url, request.url));
+    };
 
     if (pathname === "/") {
-        if (!jwt) return redirect(signIn);
-        return NextResponse.next();
+        if (jwt) {
+            return NextResponse.next();
+        } else {
+            return redirect(signIn);
+        }
     }
 
     if (jwt && isPublicPage) return redirect(home);
