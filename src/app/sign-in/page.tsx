@@ -1,6 +1,6 @@
 "use client"
 
-import { Wallet } from "lucide-react"
+import { Wallet, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 
@@ -10,6 +10,7 @@ export default function SignInPage() {
   const { connectWithPrivy, connectWithRainbow, connecting } = useAuth()
 
   const glow = "bg-gradient-to-r from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0]"
+  const isConnecting = connecting !== null
 
   return (
     <div className="relative min-h-screen overflow-hidden text-white">
