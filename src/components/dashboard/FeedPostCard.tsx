@@ -3,8 +3,8 @@
 import { CheckCircle2, Heart, MessageCircle, Plus } from "lucide-react"
 import type { FeedPost } from "@/types/api"
 import { formatTimeAgo } from "@/lib/format-time"
-import { trimWalletAddress } from "@/lib/wallet-utils"
 import Image from "next/image"
+import { ipfsToGateway } from "@/lib/utils"
 
 interface FeedPostCardProps {
   post: FeedPost
@@ -41,10 +41,6 @@ export function FeedPostCard({ post }: Readonly<FeedPostCardProps>) {
     post.author.username || `User ${post.author.id.slice(0, 8)}`
   const authorInitials = getInitials(post.author.username, post.author.id)
   const accentColor = getAccentColor(post.id.charCodeAt(0))
-
-  const imageUrl = (url:string | null | undefined) => {
-    return `https://apricot-decisive-clam-744.mypinata.cloud//${url}`
-  }
 
   return (
     <article className="rounded-4xl border border-[#132852] bg-[#030c1d]/85 p-6 shadow-[0_20px_55px_rgba(2,8,27,0.85)] backdrop-blur">
@@ -91,7 +87,7 @@ export function FeedPostCard({ post }: Readonly<FeedPostCardProps>) {
             <div
               key={media.id}
               className="h-28 flex-1 rounded-2xl border border-white/5 bg-cover bg-center"
-              style={{ backgroundImage: `url(${imageUrl(media.url)})` }}
+              style={{ backgroundImage: `url(${ipfsToGateway(media.url)})` }}
             />
           ))}
         </div>
