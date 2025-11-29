@@ -1,6 +1,6 @@
 "use client"
 
-import { Wallet } from "lucide-react"
+import { Wallet, Loader2 } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import Image from "next/image"
 
@@ -10,6 +10,7 @@ export default function SignInPage() {
   const { connectWithPrivy, connectWithRainbow, connecting } = useAuth()
 
   const glow = "bg-gradient-to-r from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0]"
+  const isConnecting = connecting !== null
 
   return (
     <div className="relative min-h-screen overflow-hidden text-white">
@@ -50,10 +51,15 @@ export default function SignInPage() {
               <div className="space-y-3">
                 <button
                   onClick={connectWithPrivy}
-                  disabled={connecting === "privy"}
-                  className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#3BA3FF]/50 disabled:opacity-60"
+                  disabled={isConnecting}
+                  className="flex w-full items-center justify-between rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-white transition hover:border-[#3BA3FF]/50 disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  <span>Login with Privy</span>
+                  <div className="flex items-center gap-2">
+                    {connecting === "privy" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-[#3BA3FF]" />
+                    )}
+                    <span>Login with Privy</span>
+                  </div>
                   <span className="text-xs text-white/80">
                     {connecting === "privy"
                       ? "Connecting..."
@@ -62,11 +68,16 @@ export default function SignInPage() {
                 </button>
                 <button
                   onClick={connectWithRainbow}
-                  disabled={connecting === "rainbow"}
-                  className={`flex w-full items-center justify-between rounded-2xl border border-white/10 ${glow} px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(94,123,255,0.45)] transition hover:scale-[1.01] disabled:opacity-60`}
+                  disabled={isConnecting}
+                  className={`flex w-full items-center justify-between rounded-2xl border border-white/10 ${glow} px-4 py-3 text-sm font-semibold text-white shadow-[0_12px_40px_rgba(94,123,255,0.45)] transition hover:scale-[1.01] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:scale-100`}
                 >
-                  <span>Connect Wallet (Rainbow)</span>
-                  <Wallet className="h-4 w-4" />
+                  <div className="flex items-center gap-2">
+                    {connecting === "rainbow" && (
+                      <Loader2 className="h-4 w-4 animate-spin text-white" />
+                    )}
+                    <span>Connect Wallet (Rainbow)</span>
+                  </div>
+                  {connecting !== "rainbow" && <Wallet className="h-4 w-4" />}
                 </button>
               </div>
             </div>
