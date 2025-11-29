@@ -231,34 +231,6 @@ export function AuthProvider({
   }
 
 
-  const connectWithPrivy = () => {
-    connectWithPrivyOrigin()
-  }
-
-  const connectWithRainbow = () => {
-    if (isConnected) {
-      disconnect()
-      openConnectModal && openConnectModal()
-    } else {
-      openConnectModal && openConnectModal()
-    }
-  }
-
-
-  const connectWithPrivy = () => {
-    connectWithPrivyOrigin()
-  }
-
-  const connectWithRainbow = () => {
-    if (isConnected) {
-      disconnect()
-      openConnectModal && openConnectModal()
-    } else {
-      openConnectModal && openConnectModal()
-    }
-  }
-
-
   const value = useMemo<AuthContextType>(
     () => ({
       isAuthenticated,
