@@ -12,6 +12,34 @@ import {
 
 import { cn } from "@/lib/utils"
 import { useAuth } from "@/contexts/auth-context"
+import { useCurrentUser } from "@/hooks/page/useCurrentUser"
+
+/**
+ * Trim wallet address untuk menampilkan format yang lebih pendek
+ * Format: 0x1234...5678 (default: 6 karakter awal + 4 karakter akhir)
+ * 
+ * @param address - Wallet address yang akan di-trim
+ * @param startLength - Jumlah karakter dari awal yang ditampilkan (default: 6)
+ * @param endLength - Jumlah karakter dari akhir yang ditampilkan (default: 4)
+ * @returns Trimmed wallet address atau address asli jika terlalu pendek
+ */
+function trimWalletAddress(
+  address: string | null | undefined,
+  startLength = 6,
+  endLength = 4,
+): string {
+  if (!address) return ""
+  
+  // Jika address terlalu pendek, return as is
+  if (address.length <= startLength + endLength) {
+    return address
+  }
+
+  const start = address.slice(0, startLength)
+  const end = address.slice(-endLength)
+  
+  return `${start}...${end}`
+}
 
 type ProfileMenuIntent = "default" | "danger"
 
@@ -32,7 +60,7 @@ export type SearchFilterOption = {
 const defaultProfileMenu: ProfileMenuItem[] = [
   { label: "Profile", icon: <User className="h-4 w-4" />, href: "/profile" },
   // { label: "Edit Profile", icon: <User className="h-4 w-4" />, href: "/profile/edit" },
-  { label: "My Posted Job", icon: <Briefcase className="h-4 w-4" /> },
+  // { label: "My Posted Job", icon: <Briefcase className="h-4 w-4" /> },
   { label: "Disconnect", intent: "danger", icon: <Power className="h-4 w-4" /> },
 ]
 
@@ -60,6 +88,14 @@ export function DashboardHeader({
   const [filterMenuOpen, setFilterMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
   const filterRef = useRef<HTMLDivElement>(null)
+
+  const { user } = useCurrentUser()
+  
+  const displayName = useMemo(() => {
+    if (user?.username) return user.username
+    if (user?.walletAddress) return trimWalletAddress(user.walletAddress)
+    return ""
+  }, [user])
 
   useEffect(() => {
     const handleClick = (event: MouseEvent) => {
@@ -160,24 +196,25 @@ export function DashboardHeader({
             </button>
             <div className="relative" ref={menuRef}>
               <button
-                className="flex items-center gap-2 rounded-full border border-white/10 bg-[#050f22] pl-2 pr-3 text-sm transition hover:bg-white/10"
+                className="flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-[#050f22] pl-2 pr-3 text-sm transition hover:bg-white/10"
                 onClick={() => setIsMenuOpen((prev) => !prev)}
               >
-                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
+                  <p className="text-sm font-semibold p-4">{displayName}</p>
+                {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
                   TR
-                </div>
+                </div> */}
                 <ChevronDown className="h-4 w-4 text-gray-400" />
               </button>
               {isMenuOpen && (
                 <div className="absolute right-0 top-14 w-60 rounded-3xl border border-white/10 bg-[#020714]/95 p-4 shadow-[0_25px_60px_rgba(1,4,16,0.8)]">
                   <div className="flex items-center justify-between rounded-2xl border border-white/5 bg-linear-to-r from-[#071935] to-[#050d21] px-3 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-sm font-semibold">
+                      {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-sm font-semibold">
                         TR
-                      </div>
+                      </div> */}
                       <div className="text-left">
-                        <p className="text-sm font-semibold">DeadSfx</p>
-                        <p className="text-xs text-gray-400">UI UX Designer</p>
+                        <p className="text-sm font-semibold">{displayName}</p>
+                        <p className="text-xs text-gray-400">{user?.jobTitle ?? user?.jobType}</p>
                       </div>
                     </div>
                     <div className="h-10 w-10 rounded-full border border-white/10 bg-linear-to-br from-[#42E8E0] to-[#6B4DFF]" />
