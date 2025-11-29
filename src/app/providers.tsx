@@ -42,11 +42,6 @@ export function Providers({
     setupErrorHandler()
   }, [])
 
-  // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
-  useEffect(() => {
-    setupErrorHandler()
-  }, [])
-
   return (
     <QueryClientProvider client={queryClient}>
       <LoadingProvider key={loadKey}>
