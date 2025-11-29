@@ -19,11 +19,6 @@ interface AuthContextType {
   logout: () => void;
 }
 
-interface AuthContextType {
-  isAuthenticated: boolean;
-  logout: () => void;
-}
-
 const queryClient = new QueryClient()
 const privyAppId = process.env.NEXT_PUBLIC_PRIVY_APP_ID
 
@@ -36,6 +31,11 @@ export function Providers({
   const privyKey = useId()
   const wagmiKey = useId()
   const rkKey = useId()
+
+  // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
+  useEffect(() => {
+    setupErrorHandler()
+  }, [])
 
   // Setup error handler untuk suppress chrome.runtime errors dari wallet extensions
   useEffect(() => {

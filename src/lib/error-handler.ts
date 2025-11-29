@@ -26,31 +26,6 @@ export function setupErrorHandler() {
       return
     }
 
-    // Handle Privy OAuth errors
-    if (
-      errorMessage.includes("Login with Google not allowed") ||
-      errorMessage.includes("oauth/init") ||
-      (typeof error === "object" &&
-        error !== null &&
-        "message" in error &&
-        String(error.message).includes("not allowed"))
-    ) {
-      event.preventDefault()
-      // Show user-friendly error message for Privy OAuth errors
-      if (globalThis.window.document) {
-        // Try to show toast notification if available
-        const event = new CustomEvent("privy-oauth-error", {
-          detail: {
-            message: "Google login is not configured in Privy Dashboard. Please contact administrator or use wallet login instead.",
-            error: errorMessage,
-          },
-        })
-        globalThis.window.dispatchEvent(event)
-      }
-      console.error("Privy OAuth Error:", errorMessage)
-      return
-    }
-
     // Log other errors for debugging
     if (process.env.NODE_ENV === "development") {
       console.warn("Unhandled promise rejection:", error)
