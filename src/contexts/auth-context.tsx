@@ -9,7 +9,7 @@ import {
   useState,
 } from "react"
 import { usePrivy } from "@privy-io/react-auth"
-import { useAccount, useConnection, useDisconnect, useSignMessage } from "wagmi"
+import { useConnection, useDisconnect, useSignMessage } from "wagmi"
 
 import { useLoginApi } from "@/hooks/api/auth"
 import { AUTH_MESSAGE } from "@/constant/auth"
@@ -18,6 +18,7 @@ import { Address } from "viem"
 import { toast } from "sonner"
 import { useRouter } from "next/navigation"
 import { ROUTES } from "@/constant/route"
+import { useLoading } from "./loading-context"
 
 const AuthContext = createContext<AuthContextType | null>(null)
 
@@ -72,6 +73,7 @@ export function AuthProvider({
 }: Readonly<{ children: React.ReactNode; initialJwt?: string | null }>) {
   const router = useRouter()
   const loginApi = useLoginApi()
+  const { hide: hideLoad, show: showLoad } = useLoading()
 
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
@@ -83,7 +85,7 @@ export function AuthProvider({
   const isProcessingPrivyLogin = useRef(false)
   const isDisconnecting = useRef(false)
 
-  const { openConnectModal: connectWithRainbow } = useConnectModal()
+  const { openConnectModal } = useConnectModal();
   const { address, isConnected } = useConnection()
   const { disconnect } = useDisconnect()
   const { signMessageAsync } = useSignMessage()
@@ -99,30 +101,6 @@ export function AuthProvider({
   const openLoginModal = useCallback(() => setShowLoginModal(true), [])
   const closeLoginModal = useCallback(() => setShowLoginModal(false), [])
 
-  useEffect(() => {
-    const storedJwt =
-      initialJwt ??
-      (typeof document === "undefined"
-        ? null
-        : document.cookie
-            .split("; ")
-            .find((row) => row.startsWith("jwt="))
-            ?.split("=")[1] ?? null)
-
-    const valid = checkExpiration(storedJwt)
-    if (!valid && storedJwt) {
-      if (typeof document !== "undefined") {
-        document.cookie = "jwt=; Max-Age=0; path=/"
-        router.replace(ROUTES.signIn)
-      }
-      return
-    }
-    if (valid) {
-      setIsAuthenticated(true)
-    }
-  }, [initialJwt, router])
-
-  // Initial JWT check from cookies (server -> client)
   useEffect(() => {
     const storedJwt =
       initialJwt ??
@@ -213,8 +191,9 @@ export function AuthProvider({
           account: address as Address,
         })
 
-        const res = await loginApi.mutateAsync({
-          walletAddress: address,
+        showLoad()
+        await loginApi.mutateAsync({
+          walletAddress: address as Address,
           signature,
           message: AUTH_MESSAGE,
         })
@@ -254,16 +233,9 @@ export function AuthProvider({
 
     completeRainbowKitLogin()
   }, [
-    address,
-    isConnected,
-    isAuthenticated,
-    loginApi.isPending,
-    signMessageAsync,
-    loginApi,
-    disconnect,
-    router,
     initialJwt,
-    isLoggingOut,
+    address,
+    isConnected
   ])
 
   useEffect(() => {
@@ -308,7 +280,8 @@ export function AuthProvider({
           message: AUTH_MESSAGE,
         })
 
-        const res = await loginApi.mutateAsync({
+        showLoad()
+        await loginApi.mutateAsync({
           walletAddress: wallet as Address,
           signature: sign.signature,
           message: AUTH_MESSAGE,
@@ -348,41 +321,7 @@ export function AuthProvider({
     }
 
     completePrivyLogin()
-  }, [
-    authenticated,
-    isAuthenticated,
-    loginApi,
-    loginApi.isPending,
-    privySignMessage,
-    privyUser,
-    router,
-    privyLogout,
-    initialJwt,
-    isLoggingOut,
-  ])
-
-  // Handle wallet disconnect - prevent re-sign message
-  useEffect(() => {
-    if (!isConnected && !isLoggingOut && isAuthenticated) {
-      // Wallet was disconnected while authenticated (not through logout)
-      isDisconnecting.current = true
-      
-      // Clear auth state
-      setIsAuthenticated(false)
-      setWalletAddress(null)
-      
-      // Clear JWT from cookies
-      if (typeof document !== "undefined") {
-        document.cookie = "jwt=; Max-Age=0; path=/"
-        document.cookie = "jwt=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/"
-      }
-      
-      // Reset after cleanup
-      setTimeout(() => {
-        isDisconnecting.current = false
-      }, 1000)
-    }
-  }, [isConnected, isLoggingOut, isAuthenticated])
+  }, [authenticated, privyUser])
 
   const logout = useCallback(async () => {
     // Set disconnect flag to prevent re-sign message
@@ -421,6 +360,20 @@ export function AuthProvider({
       }, 1000)
     }
   }, [disconnect, privyLogout, router])
+
+  const connectWithPrivy = () => {
+    connectWithPrivyOrigin()
+  }
+
+  const connectWithRainbow = () => {
+    if (isConnected) {
+      disconnect()
+      openConnectModal && openConnectModal()
+    } else {
+      openConnectModal && openConnectModal()
+    }
+  }
+
 
   const value = useMemo<AuthContextType>(
     () => ({
