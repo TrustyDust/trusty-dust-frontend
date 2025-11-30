@@ -195,14 +195,7 @@ export default function ProfilePage() {
   const profileSubtitle = user?.jobTitle ?? user?.jobType ?? "Complete your profile to boost trust."
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#030714]/85 px-4 py-6 text-white sm:px-6 lg:px-8">
-      {/* --- Background Layer --- */}
-      <div className="pointer-events-none absolute inset-0 opacity-80">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#050C24] via-[#060A1B] to-[#0A0F1D]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,_rgba(59,163,255,0.35),_transparent_45%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,_rgba(107,77,255,0.25),_transparent_40%)]" />
-      </div>
-
+    <div className="relative min-h-screen overflow-hidden px-4 py-6 text-white sm:px-6 lg:px-8">
       <div className="relative z-10 mx-auto flex w-full max-w-7xl flex-col gap-6">
         <DashboardHeader/>
 
