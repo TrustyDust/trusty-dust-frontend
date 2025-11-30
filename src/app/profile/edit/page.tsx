@@ -72,9 +72,9 @@ const handleAddField = () => {
         <DashboardHeader
           actions={
             <>
-              <button className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-[#051431] px-4 py-2 text-sm font-semibold text-gray-100 transition hover:bg-white/10 sm:flex">
+              {/* <button className="hidden items-center gap-2 rounded-2xl border border-white/10 bg-[#051431] px-4 py-2 text-sm font-semibold text-gray-100 transition hover:bg-white/10 sm:flex">
                 $100 DUST
-              </button>
+              </button> */}
               <button className="rounded-full border border-transparent bg-linear-to-r from-[#2E7FFF] to-[#6B4DFF] px-5 py-2 text-sm font-semibold shadow-[0_15px_45px_rgba(36,122,255,0.45)]">
                 Become Pro Member
               </button>

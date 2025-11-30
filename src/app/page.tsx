@@ -354,9 +354,6 @@ export default function Dashboard() {
                   ))}
                 </div>
               )}
-              <div className="hidden rounded-full border border-white/10 bg-linear-to-r from-[#3BA3FF]/20 to-[#6B4DFF]/10 px-4 py-2 text-sm font-semibold text-[#AEE5FF] sm:flex">
-                $100 DUST
-              </div>
             </div>
           }
         />
