@@ -551,7 +551,7 @@ export default function ChatPage() {
                                   : "rounded-tl-none border border-white/5 bg-[#0A1325] text-gray-200",
                               )}
                             >
-                              <p className="whitespace-pre-wrap">{message.text}</p>
+                              <p className="whitespace-pre-wrap">{message?.content ?? "No message"}</p>
                             </div>
                             <div
                               className={cn(

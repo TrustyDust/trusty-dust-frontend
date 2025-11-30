@@ -486,7 +486,7 @@ export interface ChatMessage {
   id: string
   conversationId: string
   senderId: string
-  text: string
+  content: string
   metadata?: Record<string, unknown> | null
   createdAt: string
 }
