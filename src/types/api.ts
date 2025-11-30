@@ -32,6 +32,7 @@ export interface UserProfile {
   jobType?: string | null
   tier: string
   trustScore: number
+  dustBalance: number
   createdAt: string
   updatedAt: string
 }

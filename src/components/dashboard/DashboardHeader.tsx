@@ -444,7 +444,12 @@ export function DashboardHeader({
                   setIsMenuOpen((prev) => !prev)
                 }}
               >
-                  <p className="text-sm font-semibold p-4">{displayName}</p>
+                <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-[#051431] border border-white/5">
+                  <span className="text-xs font-semibold text-[#42E8E0]">
+                    {user?.dustBalance?.toLocaleString() ?? 0} DUST
+                  </span>
+                </div>
+                <p className="text-sm font-semibold p-4">{displayName}</p>
                 {/* <div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-[#3BA3FF] via-[#6B4DFF] to-[#42E8E0] text-base font-semibold">
                   TR
                 </div> */}
