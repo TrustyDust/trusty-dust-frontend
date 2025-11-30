@@ -29,3 +29,5 @@ prompt
 *.sw?
 
 prompt
+
+next-env.d.ts
